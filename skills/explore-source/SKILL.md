@@ -65,42 +65,172 @@ rtk ls .
 
 ## Output: write the onboarding docs
 
-This skill produces **four Markdown files** in `docs/onboarding/`. Create the directory if missing, and overwrite existing files (they are regenerated docs). Every claim must come from files you actually read — cite sources as `path/to/file.ext:line` and flag anything you couldn't verify rather than guessing.
+This skill produces **four Markdown files** in `docs/onboarding/`. Create the directory if missing, and overwrite existing files (they are regenerated docs). Use the **exact templates below** — fixed frontmatter and headings — so the docs stay consistent across regenerations and other skills (`spec`, `plan`, `coding`) can rely on their structure.
+
+Rules for all four files:
+- Every claim must come from files you actually read — cite sources as `path/to/file.ext:line`; never invent paths.
+- Set `updated:` in the frontmatter to the current date-time (`YYYY-MM-DD HH:MM +TZ`, from `date` — don't guess).
+- Keep every template heading, in order. If a section has nothing, write `_None found._` instead of deleting it.
+- Mark anything you couldn't confirm with `(unverified)` rather than guessing.
 
 ### `docs/onboarding/what-is-stack.md`
-The tech overview.
-- Language(s) + version, framework(s), package manager.
-- Architecture: the layers and how a typical flow moves through them (entry → handler → service → data), with key files as `path:line`.
-- External dependencies: DB, cache, queues, third-party APIs, auth.
+The tech overview: what the project is, what it's built with, and how a request moves through it.
+
+```markdown
+---
+doc: what-is-stack
+updated: <YYYY-MM-DD HH:MM +TZ>
+---
+
+# What Is the Stack
+
+## Overview
+<1–3 sentences: what this project is and does>
+
+## Stack
+| Layer | Choice | Version | Source |
+|---|---|---|---|
+| Language | <TypeScript> | <5.x> | `package.json:5` |
+| Framework | | | |
+| Package manager | | | |
+| Runtime / infra | | | |
+
+## Architecture
+<the layers and how they connect — 3–6 bullets>
+
+### A typical flow
+<one real request/flow traced end-to-end, `path:line` at each hop>
+1. <entry> — `path:line`
+2. <handler> — `path:line`
+3. <service / data layer> — `path:line`
+
+## External Dependencies
+| Dependency | Kind | Used for | Where wired |
+|---|---|---|---|
+| <Postgres> | DB | <persistence> | `path:line` |
+
+## Open Questions
+- <anything unverified or ambiguous>
+```
 
 ### `docs/onboarding/source-structure.md`
 The folder map — so a new dev knows where things live.
-- Directory tree of the repo (skip `node_modules`, `.git`, `dist`, `vendor`, `target`).
-- For each significant folder: its role/responsibility and what kind of code belongs there.
-- Note entry-point files and any folders with special conventions (e.g. `migrations/`, `config/`, `tests/`).
+
+```markdown
+---
+doc: source-structure
+updated: <YYYY-MM-DD HH:MM +TZ>
+---
+
+# Source Structure
+
+## Directory Tree
+<tree, 2–3 levels deep; skip `node_modules`, `.git`, `dist`, `vendor`, `target`>
+
+## Folder Roles
+| Path | Role | What belongs here |
+|---|---|---|
+| `src/` | <role> | <kind of code> |
+
+## Entry Points
+| Entry | File | Triggered by |
+|---|---|---|
+| <web server> | `src/index.ts:1` | `npm start` |
+
+## Special Conventions
+- `<folder>/` — <naming/ordering rule that applies inside it>
+```
 
 ### `docs/onboarding/how-to-code.md`
-The day-to-day dev guide. It must answer three questions concretely: **where to put code, how to write it cleanly, and which rules to follow.**
+The day-to-day dev guide. It must answer three questions concretely: **where to put code, how to write it cleanly, and which rules to follow.** Conventions are learned from the actual code, not generic advice — each one needs a real example (`path:line`). When the repo's own conventions are unclear, say so and recommend a sensible default rather than inventing a rule — but always prefer matching existing code over imposing a new style.
 
-- **Local setup:** prerequisites, install deps, `.env` setup, start services — **exact commands** verified from manifests.
-- **Run / test / lint commands.**
-- **Where to code (placement):** for each common task (new feature, API endpoint, model, util, test), say exactly which folder/file it belongs in. Derive this from `source-structure.md` and real examples in the repo — point to an existing file to copy the pattern from (`path:line`).
-- **How to write clean code here:** the project's conventions, learned from the actual code, not generic advice —
-  - Naming (files, functions, variables, components) with a real example.
-  - Module/file size & responsibility (single responsibility, where to split).
-  - How layers stay separated (e.g. don't call the DB from a controller — go through a service).
-  - Error handling, logging, and typing patterns the codebase already uses.
-  - Imports ordering / path aliases.
-- **Rules to follow (enforced):** lint/format config (`.eslintrc`, `ruff`, `.prettierrc`, `.editorconfig`) and the commands that check them; pre-commit hooks / CI gates; test coverage expectations. State which rules are auto-enforced vs. convention.
-- **Git workflow:** branch naming, commit/PR conventions, review process (if documented).
+```markdown
+---
+doc: how-to-code
+updated: <YYYY-MM-DD HH:MM +TZ>
+---
 
-When the repo's own conventions are unclear, say so and recommend a sensible default rather than inventing a rule — but always prefer matching existing code over imposing a new style.
+# How to Code Here
+
+## Local Setup
+<prerequisites, then exact commands verified from manifests>
+1. <install deps> — `<command>`
+2. <.env setup> — `<command / file to copy>`
+3. <start services> — `<command>`
+
+## Daily Commands
+| Action | Command | Notes |
+|---|---|---|
+| Run | | |
+| Test | | |
+| Lint | | |
+| Format | | |
+
+## Where to Put Code
+| Task | Location | Copy the pattern from |
+|---|---|---|
+| New feature | `<folder>` | `path:line` |
+| API endpoint | | |
+| Model / schema | | |
+| Shared util | | |
+| Test | | |
+
+## Conventions
+### Naming
+<files, functions, variables, components — with a real example `path:line`>
+
+### Module size & responsibility
+<single responsibility, when/where to split>
+
+### Layer separation
+<e.g. don't call the DB from a controller — go through a service>
+
+### Errors, logging, typing
+<the patterns the codebase already uses, `path:line`>
+
+### Imports & path aliases
+<ordering, aliases like `@/`>
+
+## Enforced Rules
+| Rule | Config | Check command | Enforcement |
+|---|---|---|---|
+| <lint> | `.eslintrc` | `npm run lint` | <CI / pre-commit / convention> |
+
+## Git Workflow
+- Branch naming: <pattern, or _Not documented._>
+- Commits / PRs: <convention, or _Not documented._>
+- Review process: <if documented>
+```
 
 ### `docs/onboarding/how-to-deploy.md`
 The release path.
-- Environments (dev / staging / prod) and how they differ.
-- Build & deploy steps; CI/CD pipeline (from `.github/workflows/`, `Dockerfile`, `Makefile`, etc.).
-- Required env vars / secrets (names only — never values).
-- Rollback / on-call notes if documented.
+
+```markdown
+---
+doc: how-to-deploy
+updated: <YYYY-MM-DD HH:MM +TZ>
+---
+
+# How to Deploy
+
+## Environments
+| Env | Where it runs | How it differs |
+|---|---|---|
+| dev | | |
+| prod | | |
+
+## Build & Deploy Pipeline
+<steps from CI/Docker/Makefile, each citing its source>
+1. <step> — `.github/workflows/<file>:line`
+
+## Required Env Vars / Secrets
+Names only — **never values**.
+| Name | Used by | Required in |
+|---|---|---|
+| `DATABASE_URL` | `path:line` | all envs |
+
+## Rollback / On-call
+- <if documented; else _Not documented._>
+```
 
 After writing, give the user a short summary of what each file covers and list any **open questions** — undocumented or ambiguous areas worth confirming with the team.
