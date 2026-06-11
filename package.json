@@ -1,0 +1,34 @@
+{
+  "name": "specship",
+  "version": "0.1.0",
+  "description": "Install a staged spec→plan→coding→review agent workflow (skills + per-agent config) into any project. Works with Claude Code, Codex, Cursor, and Antigravity.",
+  "bin": {
+    "specship": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "node test/cli.test.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    ".claude",
+    ".codex",
+    ".cursor",
+    ".antigravity",
+    "README.md"
+  ],
+  "keywords": [
+    "agent",
+    "workflow",
+    "skills",
+    "claude",
+    "codex",
+    "cursor",
+    "scaffold"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}

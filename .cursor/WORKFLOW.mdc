@@ -1,0 +1,18 @@
+---
+description: Staged spec→plan→coding→review workflow with shared task state on disk
+alwaysApply: true
+---
+
+For any non-trivial change, follow `.cursor/skills/WORKFLOW.md` and the per-stage
+playbooks in `.cursor/skills/<stage>/SKILL.md` (spec → plan → coding → review;
+debug as needed).
+
+Rules:
+- Maintain shared state in `tasks/TASK-<ID>/`: read `task.md` first, update it last.
+- Keep IDs stable (`R#` requirement, `AC#` acceptance criterion, `S#` step, `BUG#`);
+  never renumber. `coding` ticks `S#` in plan.md; `review` ticks `AC#` in spec.md.
+- Timestamp every log entry as `YYYY-MM-DD HH:MM +TZ` (get it from `date`, don't guess).
+- Follow `docs/onboarding/how-to-code.md` for code style and placement; run
+  `explore-source` to generate `docs/onboarding/*` if missing.
+- Only the pipeline stages write to `tasks/`. Ask the user before advancing stages.
+- Don't run git add / commit / push unless asked.
