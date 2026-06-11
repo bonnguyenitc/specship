@@ -23,6 +23,6 @@ module.exports = {
   antigravity: {
     label: 'Antigravity (Gemini)',
     skillsDest: '.agent/skills',
-    doc: { src: '.antigravity/GEMINI.md', dest: 'GEMINI.md', merge: true },
+    doc: { src: '.antigravity/rules.md', dest: '.agent/rules/specship.md', merge: false },
   },
 };

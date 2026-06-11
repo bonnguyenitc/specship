@@ -21,7 +21,7 @@ writes/merges its **config pointer** at the correct native path:
 | `--claude` | `.claude/skills/` | `CLAUDE.md` | merge |
 | `--codex` | `.codex/skills/` | `AGENTS.md` | merge |
 | `--cursor` | `.cursor/skills/` | `.cursor/rules/specship.mdc` | write |
-| `--antigravity` | `.agent/skills/` | `GEMINI.md` | merge |
+| `--antigravity` | `.agent/skills/` | `.agent/rules/specship.md` | write |
 
 - **merge** = inserts an idempotent `<!-- specship:start -->…<!-- specship:end -->`
   block into your existing file (re-running `init` updates the block, never
@@ -85,7 +85,7 @@ skills/                 # canonical skill playbooks (the source of truth, shippe
 .claude/CLAUDE.md       # pointer template → installed as CLAUDE.md
 .codex/AGENTS.md        # pointer template → installed as AGENTS.md
 .cursor/WORKFLOW.mdc    # pointer template → installed as .cursor/rules/specship.mdc
-.antigravity/GEMINI.md  # pointer template → installed as GEMINI.md
+.antigravity/rules.md   # pointer template → installed as .agent/rules/specship.md
 bin/cli.js              # CLI entry
 src/                    # CLI logic — targets.js holds the source→dest mapping
 examples/slugify-demo/  # a complete worked task (not installed)

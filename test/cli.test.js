@@ -70,7 +70,7 @@ test('--all installs each agent at its native paths', () => {
   assert.ok(fs.existsSync(path.join(d, '.cursor/skills/WORKFLOW.md')));
   assert.ok(fs.existsSync(path.join(d, '.agent/skills/WORKFLOW.md')), 'antigravity → .agent/skills');
   assert.ok(fs.existsSync(path.join(d, '.cursor/rules/specship.mdc')));
-  assert.ok(fs.existsSync(path.join(d, 'GEMINI.md')));
+  assert.ok(fs.existsSync(path.join(d, '.agent/rules/specship.md')));
 });
 
 test('installed skills reference resolves (../WORKFLOW.md)', () => {

@@ -1,3 +1,8 @@
+---
+description: Staged spec→plan→coding→review workflow with shared task state on disk
+alwaysApply: true
+---
+
 ## Agent feature workflow (specship)
 
 For any non-trivial change, follow the staged workflow defined in
