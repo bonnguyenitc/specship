@@ -26,12 +26,14 @@ Every task lives in its own folder, **`tasks/TASK-<ID>/`**, where the stages
 cooperate through shared artifacts on disk:
 
 ```
-tasks/TASK-001/
-├── task.md      # SHARED STATE — stage, status, pipeline log (source of truth)
-├── spec.md      # requirements (R#), acceptance criteria (AC#)
-├── plan.md      # ordered steps (S#), each tracing to R#/AC#
-├── review.md    # gate results, AC verification, commit/PR draft
-└── debug.md     # chronological bug log (BUG#)
+tasks/
+├── LESSONS.md       # project-wide process lessons (L#), read by every stage
+└── TASK-001/
+    ├── task.md      # SHARED STATE — stage, status, pipeline log (source of truth)
+    ├── spec.md      # requirements (R#), acceptance criteria (AC#)
+    ├── plan.md      # ordered steps (S#), each tracing to R#/AC#
+    ├── review.md    # gate results, AC verification, commit/PR draft
+    └── debug.md     # chronological bug log (BUG#)
 ```
 
 Because the state is on disk — not in a chat session — any agent (or human) can
@@ -104,6 +106,15 @@ next stage immediately; decline and it stops with everything saved on disk.
 - **Upstream change invalidates downstream.** If `spec.md` changes after the
   plan exists, the plan/review may be stale — it's noted in the Pipeline Log
   and revisited.
+- **Stage preconditions are enforced.** `plan` requires a `confirmed` spec,
+  `coding` an `approved` plan, `review` all `S#` ticked. A skill that finds its
+  precondition unmet runs the missing stage (or asks) — it never skips ahead
+  silently, and every transition, block, and loop-back leaves a Pipeline Log
+  trace.
+- **The flow learns from its own mistakes.** When a process error is detected
+  (skipped checkpoint, stale artifact, missing trace, guessed timestamp), the
+  skill fixes it and appends a lesson (`L#`) to `tasks/LESSONS.md` — which
+  every stage reads at hydrate, so the same mistake isn't repeated.
 
 The full contract is in `skills/WORKFLOW.md`; each stage's playbook is in
 `skills/<stage>/SKILL.md`.
@@ -156,7 +167,8 @@ npx specship list       # see what's installed
 `examples/slugify-demo/` is a complete worked task (a `slugify()` utility) that
 ran the full pipeline — including a real bug caught during coding, root-caused
 and logged as `BUG1` in `debug.md`, then verified in review — with code and
-tests. Read its `tasks/TASK-001/*` to see every artifact in practice.
+tests. Read its `tasks/TASK-001/*` to see every artifact in practice, and
+`tasks/LESSONS.md` for real `L#` process lessons recorded against the contract.
 
 ## Package layout (for contributors)
 

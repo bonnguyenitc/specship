@@ -16,6 +16,7 @@ Goal: take a change from "code written" to "ready to ship" — verified correct,
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md`, `spec.md`, `plan.md`, `docs/onboarding/how-to-code.md`, and the diff.
 - **Checkpoint:** write `review.md` and tick verified `AC#` in `spec.md`; update `task.md` — set `review` artifact `changes-requested`/`approved`, set `stage: done` + `status: done` only when approved, bump `updated:`, append a Pipeline Log line.
+- **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake (in this stage or an earlier one), fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
 ## Method
 

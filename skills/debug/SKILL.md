@@ -16,6 +16,7 @@ Goal: find the **root cause** of a defect and fix it with the smallest correct c
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug` attaches to a task rather than being a fixed pipeline stage.
 - **Hydrate:** resolve the owning `TASK-<ID>` (see "Attach the bug to a task" below), read its `task.md`, and `spec.md`/`plan.md` as needed. If no task owns it, create a new one.
 - **Checkpoint:** append the `BUG#` entry to `debug.md`; update `task.md` — set `debug` artifact `open-bugs`/`clear`, set `status: blocked` while a blocker bug is open, bump `updated:`, append a Pipeline Log line. Return to the stage you came from when fixed.
+- **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if the bug's root cause was a process mistake (e.g. a skipped verify, a stale plan), fix the process trace too and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
 ## Attach the bug to a task
 - **If the bug belongs to an existing task** (it's in code that task touched, or found during its `coding`/`review`): track it in that task's folder → `tasks/TASK-<ID>/debug.md`.

@@ -18,12 +18,14 @@ Each arrow is a checkpoint: the skill asks the user before auto-advancing to the
 ## Task folder layout
 
 ```
-tasks/TASK-<ID>/
-├── task.md      # SHARED STATE — index + state machine for the whole task (source of truth)
-├── spec.md      # spec skill   — requirements (R#), acceptance criteria (AC#)
-├── plan.md      # plan skill   — steps (S#), each covers: R#/AC#
-├── review.md    # review skill — gate results, AC verification, commit/PR draft
-└── debug.md     # debug skill  — chronological bug log (BUG#)
+tasks/
+├── LESSONS.md       # project-wide process lessons (L#) — read by every skill (see "Lessons")
+└── TASK-<ID>/
+    ├── task.md      # SHARED STATE — index + state machine for the whole task (source of truth)
+    ├── spec.md      # spec skill   — requirements (R#), acceptance criteria (AC#)
+    ├── plan.md      # plan skill   — steps (S#), each covers: R#/AC#
+    ├── review.md    # review skill — gate results, AC verification, commit/PR draft
+    └── debug.md     # debug skill  — chronological bug log (BUG#)
 ```
 
 ### Choosing `TASK-<ID>`
@@ -64,9 +66,9 @@ artifacts:           # value = that artifact's current status (filenames are fix
 
 ## Shared-state protocol (every task skill follows this)
 
-1. **Hydrate (on start).** Resolve the active `TASK-<ID>` (from the user, the conversation, or the most recently updated `tasks/TASK-*`). Read `task.md` to learn the current stage/status, then read the upstream artifacts you depend on (see "Reads" below). If a required upstream artifact is missing, run its skill first (or ask the user).
+1. **Hydrate (on start).** Resolve the active `TASK-<ID>` (from the user, the conversation, or the most recently updated `tasks/TASK-*`). Read `task.md` to learn the current stage/status, then read the upstream artifacts you depend on (see "Reads" below) and `tasks/LESSONS.md` if present (apply its rules). **Verify your stage preconditions** (see "Flow integrity") — if an upstream artifact is missing or not in the required status, run its skill first (or ask the user); never proceed silently.
 2. **Work.** Do the skill's job, grounded in those artifacts. Cross-reference by ID (`R#`, `AC#`, `S#`, `BUG#`) — never invent parallel numbering.
-3. **Checkpoint (on end).** Write/update your own artifact, then update `task.md`: bump `updated:`, set `stage`/`status`, update the matching `artifacts:` line, and append a dated **Pipeline Log** entry. Then ask the user before auto-advancing to the next skill.
+3. **Checkpoint (on end).** Write/update your own artifact, then update `task.md`: bump `updated:`, set `stage`/`status`, update the matching `artifacts:` line, and append a dated **Pipeline Log** entry. If you detected a process mistake this stage, record it per "Lessons" below. Then ask the user before auto-advancing to the next skill.
 
 ### Per-skill reads / writes
 
@@ -78,9 +80,46 @@ artifacts:           # value = that artifact's current status (filenames are fix
 | `review`| `task.md`, `spec.md`, `plan.md`, `docs/onboarding/{how-to-code,source-structure}`, diff | `review.md`, ticks `AC#`                | stage=review→done, review=…, status=done |
 | `debug` | `task.md`, `spec.md`/`plan.md` as needed, the failing repro           | `debug.md`, regression test             | debug=open-bugs→clear, status=blocked?   |
 
+## Flow integrity — no silent shortcuts, no missing traces
+
+**Stage preconditions.** Each skill verifies these at hydrate; if unmet, run the missing skill (or ask the user) — never skip ahead silently:
+
+| Skill    | Requires before starting                                            |
+|----------|----------------------------------------------------------------------|
+| `plan`   | `spec.md` exists with `status: confirmed` (no open blocker `Q#`)     |
+| `coding` | `plan.md` exists with `status: approved`                             |
+| `review` | all `S#` in `plan.md` ticked (or deviations noted inline)            |
+| `debug`  | a concrete failing reproduction, attached to its owning `TASK-<ID>`  |
+
+**Every state change leaves a trace.** A change nobody can reconstruct later is a contract violation:
+
+- Stage transitions, blocks, loop-backs (`review → coding`, `coding → debug`) → a dated **Pipeline Log** line in `task.md`.
+- Content changes in an artifact → bump `updated:` + a dated **Change History** line in that artifact.
+- Checkbox ticks → bump `updated:` only (the Pipeline Log already records progress).
+- Skipping a gate (tests not run, AC not verified) must be stated in the artifact — never implied as done.
+
+If you find a missing trace (yours or a previous stage's), repair it first — backfill the log line, marked as backfilled — then record a lesson.
+
+## Lessons — the flow learns from its own mistakes
+
+When the **flow itself** errs — a stage run out of order, a skipped checkpoint, a stale downstream artifact not flagged, invented/renumbered IDs, a guessed timestamp, a missing trace — the skill that detects it must, in this order:
+
+1. **Fix the violation** (restore the state/trace so the contract holds again).
+2. **Append a lesson** to **`tasks/LESSONS.md`** (create it if missing). Project-wide, append-only; `L#` IDs are never renumbered:
+
+```markdown
+# Lessons — process mistakes and the rules that prevent them
+
+- L1 — <YYYY-MM-DD HH:MM +TZ> [TASK-<ID>, <stage>] mistake: <what went wrong> → rule: <one imperative sentence to follow next time>
+```
+
+3. Every skill **reads `tasks/LESSONS.md` at hydrate** and applies its rules — that's what makes a lesson learned instead of merely logged.
+
+Scope: lessons are for **process/flow mistakes** only. Code defects belong in the task's `debug.md` as `BUG#`; if a lesson reveals a gap in this contract itself, propose an edit to this file to the user.
+
 ## ID & status conventions (shared vocabulary)
 
-- **IDs are append-only and stable:** `R#` (requirement), `AC#` (acceptance criterion), `S#` (step), `BUG#`. Never renumber — downstream artifacts reference them. To drop one, strike it through with a timestamp (`~~R2 (removed 2026-06-11 17:12 +07)~~`), don't delete.
+- **IDs are append-only and stable:** `R#` (requirement), `AC#` (acceptance criterion), `S#` (step), `BUG#`, `L#` (lesson). Never renumber — downstream artifacts reference them. To drop one, strike it through with a timestamp (`~~R2 (removed 2026-06-11 17:12 +07)~~`), don't delete.
 - **Checkboxes track progress:** `coding` ticks `S#` in `plan.md`; `review` ticks `AC#` in `spec.md`. An unticked `S#`/`AC#` means not done. Ticking a checkbox is progress-tracking, not a content change: bump the file's `updated:` but **don't** add a Change History line — the Pipeline Log in `task.md` already records it.
 - **Timestamp format:** every `created:` / `updated:`, Change History, and Pipeline Log entry uses **`YYYY-MM-DD HH:MM` with the timezone offset** (e.g. `2026-06-11 17:12 +07`) — date alone is not enough to order changes within a day. Get the real current time (e.g. `date "+%Y-%m-%d %H:%M %Z"`), never guess it.
 - **Every file carries `created:`/`updated:` + a Change/Pipeline log** so changes are traceable over time. Edit artifacts in place; never fork a v2 file.

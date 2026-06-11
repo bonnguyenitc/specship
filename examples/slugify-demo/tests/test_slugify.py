@@ -20,5 +20,19 @@ class TestSlugify(unittest.TestCase):
         self.assertEqual(slugify(""), "")
 
 
+class TestSlugifyMaxLength(unittest.TestCase):     # TASK-002
+    def test_ac1_no_max_unchanged(self):           # TASK-002 AC1
+        self.assertEqual(slugify("Hello World"), "hello-world")
+
+    def test_ac2_truncates_to_max(self):           # TASK-002 AC2
+        self.assertEqual(slugify("The Quick Brown Fox", max_length=9), "the-quick")
+
+    def test_ac3_no_trailing_hyphen(self):         # TASK-002 AC3
+        self.assertEqual(slugify("Hello World", max_length=6), "hello")
+
+    def test_ac4_shorter_than_max(self):           # TASK-002 AC4
+        self.assertEqual(slugify("Café", max_length=10), "cafe")
+
+
 if __name__ == "__main__":
     unittest.main()

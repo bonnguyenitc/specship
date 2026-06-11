@@ -16,6 +16,7 @@ Goal: execute the approved plan into working, clean code — one verifiable step
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md`, `plan.md`, `spec.md`, and `docs/onboarding/how-to-code.md`. If `plan.md` is missing, run `plan` first.
 - **Checkpoint:** as steps pass, tick `S#` in `plan.md`; update `task.md` — set `stage: coding`, `coding` artifact `in-progress`→`done`, bump `updated:`, append a Pipeline Log line.
+- **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
 ## Before you write
 - **Read `tasks/TASK-<ID>/plan.md` and `spec.md`** so every change traces to a planned step and a requirement. If they're missing, run `plan` / `spec` first.

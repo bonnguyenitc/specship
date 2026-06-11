@@ -4,7 +4,7 @@ title: slugify(text) utility
 stage: done
 status: done
 created: 2026-06-11 16:40 +07
-updated: 2026-06-11 17:12 +07
+updated: 2026-06-12 00:22 +07
 artifacts:
   spec: confirmed
   plan: approved
@@ -26,3 +26,4 @@ artifacts:
 - 2026-06-11 17:05 +07 debug: BUG1 fixed, tests green
 - 2026-06-11 17:08 +07 coding: 3/3 steps done
 - 2026-06-11 17:12 +07 review: approved
+- 2026-06-12 00:22 +07 maintenance: artifacts migrated to the current WORKFLOW.md contract (backfilled — the fixes landed without a log line); lessons L1–L3 recorded in ../LESSONS.md
