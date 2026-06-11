@@ -93,3 +93,4 @@ npm publish --tag "$dist_tag" ${otp:+--otp "$otp"} --access public
 printf '\n\033[32m✓ Published %s@%s\033[0m\n' "$name" "$version"
 echo "Next, tag the release yourself if you want:"
 echo "  git add -A && git commit -m \"release: $name@$version\" && git tag v$version && git push --follow-tags"
+git add -A && git commit -m "release: specship@0.1.3" && git tag v0.1.3 && git push --follow-tags
