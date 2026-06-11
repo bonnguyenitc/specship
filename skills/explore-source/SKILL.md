@@ -175,7 +175,10 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 | Shared util | | |
 | Test | | |
 
-## Conventions
+## Code Style & Conventions
+### Formatting
+<indent, quotes, semicolons, line length — from `.prettierrc` / `.editorconfig` / formatter config; if none, infer from the code and mark `(unverified)`>
+
 ### Naming
 <files, functions, variables, components — with a real example `path:line`>
 
