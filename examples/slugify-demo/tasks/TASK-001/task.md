@@ -6,11 +6,11 @@ status: done
 created: 2026-06-11 16:40 +07
 updated: 2026-06-11 17:12 +07
 artifacts:
-  spec: spec.md       # confirmed
-  plan: plan.md       # approved
-  coding: done        # 3/3 steps
-  review: review.md   # approved
-  debug: debug.md     # clear (BUG1 fixed)
+  spec: confirmed
+  plan: approved
+  coding: done
+  review: approved
+  debug: clear
 ---
 
 # Task: slugify(text) utility

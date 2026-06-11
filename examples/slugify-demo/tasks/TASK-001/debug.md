@@ -2,6 +2,7 @@
 task: TASK-001
 title: slugify(text) utility
 type: debug
+created: 2026-06-11 17:00 +07
 updated: 2026-06-11 17:05 +07
 ---
 

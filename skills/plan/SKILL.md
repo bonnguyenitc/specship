@@ -46,8 +46,8 @@ task: TASK-<ID>
 title: <short title>
 type: plan
 status: draft        # draft | approved
-created: <YYYY-MM-DD HH:MM>
-updated: <YYYY-MM-DD HH:MM>
+created: <YYYY-MM-DD HH:MM +TZ>
+updated: <YYYY-MM-DD HH:MM +TZ>
 ---
 
 # Plan: <title>
@@ -66,7 +66,7 @@ updated: <YYYY-MM-DD HH:MM>
 - <anything that could change the plan>
 
 ## Change History
-- <YYYY-MM-DD HH:MM>: Created.
+- <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
 Keep it minimal and surgical: every step must list at least one `covers:` ID. For non-trivial plans, present it for approval before coding (use EnterPlanMode when appropriate). Set `status: approved` once the user approves.

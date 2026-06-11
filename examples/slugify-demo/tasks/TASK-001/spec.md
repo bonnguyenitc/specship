@@ -4,7 +4,7 @@ title: slugify(text) utility
 type: spec
 status: confirmed
 created: 2026-06-11 16:40 +07
-updated: 2026-06-11 16:40 +07
+updated: 2026-06-11 17:12 +07
 ---
 
 # Spec: slugify(text) utility

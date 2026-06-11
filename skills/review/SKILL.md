@@ -52,8 +52,8 @@ task: TASK-<ID>
 title: <short title>
 type: review
 status: changes-requested   # changes-requested | approved
-created: <YYYY-MM-DD HH:MM>
-updated: <YYYY-MM-DD HH:MM>
+created: <YYYY-MM-DD HH:MM +TZ>
+updated: <YYYY-MM-DD HH:MM +TZ>
 ---
 
 # Review: <title>
@@ -76,7 +76,7 @@ updated: <YYYY-MM-DD HH:MM>
 - <known limitations or deferred work>
 
 ## Change History
-- <YYYY-MM-DD HH:MM>: Reviewed.
+- <YYYY-MM-DD HH:MM +TZ>: Reviewed.
 ```
 
 ## When done — prepare commit / PR
@@ -84,3 +84,7 @@ updated: <YYYY-MM-DD HH:MM>
 - Put the **drafted** commit message + PR title/body in `review.md` for the user.
 - **Do not run `git add` / `commit` / `push`** — the user runs these themselves. Hand them the drafted message to use.
 - Set `status: approved` only when all `AC#`/`S#` are ticked and the gate is green; otherwise `changes-requested` and list what's missing in Findings.
+
+## Next step
+- **`approved`** — the task is done: hand the user the drafted commit/PR message; they run git themselves.
+- **`changes-requested`** — ask the user whether to loop back: invoke the `coding` skill to address the Findings (or `debug` if a finding is a defect), then re-run this review. Keep the same `TASK-<ID>`; the Findings are the input for the fix.

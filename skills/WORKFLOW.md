@@ -39,14 +39,14 @@ task: TASK-<ID>
 title: <short title>
 stage: spec          # spec | plan | coding | review | done
 status: active       # active | blocked | done
-created: <YYYY-MM-DD HH:MM>
-updated: <YYYY-MM-DD HH:MM>
-artifacts:
-  spec: spec.md       # status: missing | draft | confirmed
-  plan: plan.md       # status: missing | draft | approved
-  coding: -           # status: missing | in-progress | done
-  review: review.md   # status: missing | changes-requested | approved
-  debug: debug.md     # status: missing | open-bugs | clear
+created: <YYYY-MM-DD HH:MM +TZ>
+updated: <YYYY-MM-DD HH:MM +TZ>
+artifacts:           # value = that artifact's current status (filenames are fixed by the layout)
+  spec: draft        # missing | draft | confirmed
+  plan: missing      # missing | draft | approved
+  coding: missing    # missing | in-progress | done
+  review: missing    # missing | changes-requested | approved
+  debug: missing     # missing | open-bugs | clear
 ---
 
 # Task: <title>
@@ -56,10 +56,10 @@ artifacts:
 - Blocked by: <none | what>
 
 ## Pipeline Log
-- <YYYY-MM-DD HH:MM> spec: confirmed
-- <YYYY-MM-DD HH:MM> plan: approved
-- <YYYY-MM-DD HH:MM> coding: 3/5 steps done
-- <YYYY-MM-DD HH:MM> debug: BUG1 fixed
+- <YYYY-MM-DD HH:MM +TZ> spec: confirmed
+- <YYYY-MM-DD HH:MM +TZ> plan: approved
+- <YYYY-MM-DD HH:MM +TZ> coding: 3/5 steps done
+- <YYYY-MM-DD HH:MM +TZ> debug: BUG1 fixed
 ```
 
 ## Shared-state protocol (every task skill follows this)
@@ -74,14 +74,14 @@ artifacts:
 |---------|-----------------------------------------------------------------------|-----------------------------------------|------------------------------------------|
 | `spec`  | the ticket/request; `docs/onboarding/*` if present                    | `task.md` (creates), `spec.md`          | stage=spec, spec=draft→confirmed         |
 | `plan`  | `task.md`, `spec.md`, `docs/onboarding/{source-structure,how-to-code}` | `plan.md`                               | stage=plan, plan=draft→approved          |
-| `coding`| `task.md`, `plan.md`, `spec.md`, `docs/onboarding/how-to-code`        | code, ticks `S#` in `plan.md`           | stage=coding, coding=in-progress→done    |
-| `review`| `task.md`, `spec.md`, `plan.md`, `docs/onboarding/how-to-code`, diff  | `review.md`, ticks `AC#`                | stage=review→done, review=…, status=done |
+| `coding`| `task.md`, `plan.md`, `spec.md`, `docs/onboarding/{how-to-code,source-structure}` | code, ticks `S#` in `plan.md`           | stage=coding, coding=in-progress→done    |
+| `review`| `task.md`, `spec.md`, `plan.md`, `docs/onboarding/{how-to-code,source-structure}`, diff | `review.md`, ticks `AC#`                | stage=review→done, review=…, status=done |
 | `debug` | `task.md`, `spec.md`/`plan.md` as needed, the failing repro           | `debug.md`, regression test             | debug=open-bugs→clear, status=blocked?   |
 
 ## ID & status conventions (shared vocabulary)
 
 - **IDs are append-only and stable:** `R#` (requirement), `AC#` (acceptance criterion), `S#` (step), `BUG#`. Never renumber — downstream artifacts reference them. To drop one, strike it through with a timestamp (`~~R2 (removed 2026-06-11 17:12 +07)~~`), don't delete.
-- **Checkboxes track progress:** `coding` ticks `S#` in `plan.md`; `review` ticks `AC#` in `spec.md`. An unticked `S#`/`AC#` means not done.
+- **Checkboxes track progress:** `coding` ticks `S#` in `plan.md`; `review` ticks `AC#` in `spec.md`. An unticked `S#`/`AC#` means not done. Ticking a checkbox is progress-tracking, not a content change: bump the file's `updated:` but **don't** add a Change History line — the Pipeline Log in `task.md` already records it.
 - **Timestamp format:** every `created:` / `updated:`, Change History, and Pipeline Log entry uses **`YYYY-MM-DD HH:MM` with the timezone offset** (e.g. `2026-06-11 17:12 +07`) — date alone is not enough to order changes within a day. Get the real current time (e.g. `date "+%Y-%m-%d %H:%M %Z"`), never guess it.
 - **Every file carries `created:`/`updated:` + a Change/Pipeline log** so changes are traceable over time. Edit artifacts in place; never fork a v2 file.
 - **Upstream change invalidates downstream:** if `spec.md` changes after `plan.md` exists, the plan (and review) may be stale — note it in the Pipeline Log and revisit.

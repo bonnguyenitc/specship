@@ -4,7 +4,7 @@ title: slugify(text) utility
 type: plan
 status: approved
 created: 2026-06-11 16:52 +07
-updated: 2026-06-11 16:52 +07
+updated: 2026-06-11 17:08 +07
 ---
 
 # Plan: slugify(text) utility

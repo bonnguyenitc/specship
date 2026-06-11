@@ -42,14 +42,15 @@ Append the bug to **`tasks/TASK-<ID>/debug.md`** (create it if missing). Each bu
 task: TASK-<ID>
 title: <short title>
 type: debug
-updated: <YYYY-MM-DD HH:MM>
+created: <YYYY-MM-DD HH:MM +TZ>
+updated: <YYYY-MM-DD HH:MM +TZ>
 ---
 
 # Debug Log: TASK-<ID>
 
 ## BUG1 — <one-line summary>
 - status: fixed        # investigating | fixed | wont-fix
-- date: <YYYY-MM-DD HH:MM>
+- date: <YYYY-MM-DD HH:MM +TZ>
 - symptom: <observed wrong behavior + error/stack>
 - reproduce: <steps / failing test that triggers it>
 - root cause: <the actual underlying cause, at `path:line`>

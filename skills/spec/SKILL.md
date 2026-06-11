@@ -50,8 +50,8 @@ task: TASK-<ID>
 title: <short title>
 type: spec
 status: draft        # draft | confirmed
-created: <YYYY-MM-DD HH:MM>
-updated: <YYYY-MM-DD HH:MM>
+created: <YYYY-MM-DD HH:MM +TZ>
+updated: <YYYY-MM-DD HH:MM +TZ>
 ---
 
 # Spec: <title>
@@ -78,7 +78,7 @@ updated: <YYYY-MM-DD HH:MM>
 - [ ] Q2: <nice-to-clarify>
 
 ## Change History
-- <YYYY-MM-DD HH:MM>: Created.
+- <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
 Keep entries concise and verifiable. State assumptions explicitly. Set `status: confirmed` once open questions are resolved or acknowledged.
