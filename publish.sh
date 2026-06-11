@@ -14,9 +14,9 @@
 #   --otp <code>     One-time password for 2FA-protected accounts
 #   --yes            Skip the final confirmation prompt
 #
-# Note: version bumps use --no-git-tag-version, so NO git commit or tag is made.
-#       After a successful publish the script prints the git commands for you to
-#       run yourself.
+# Note: version bumps use --no-git-tag-version during the build steps.
+#       After a successful publish the script auto-commits, tags (v<version>)
+#       and pushes with --follow-tags.
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -91,5 +91,16 @@ step "Publishing"
 npm publish --tag "$dist_tag" ${otp:+--otp "$otp"} --access public
 
 printf '\n\033[32m✓ Published %s@%s\033[0m\n' "$name" "$version"
-echo "Next, tag the release yourself if you want:"
-echo "  git add -A && git commit -m \"release: $name@$version\" && git tag v$version && git push --follow-tags"
+
+# --- git commit, tag & push --------------------------------------------------
+step "Committing & pushing release"
+git add -A
+if git diff --cached --quiet; then
+  echo "Nothing to commit."
+else
+  git commit -m "release: $name@$version"
+fi
+git tag "v$version"
+git push --follow-tags
+
+printf '\n\033[32m✓ Pushed release: %s@%s (tag v%s)\033[0m\n' "$name" "$version" "$version"
