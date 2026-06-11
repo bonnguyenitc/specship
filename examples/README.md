@@ -9,6 +9,7 @@ the generated artifacts look like in practice. It is **not** installed by
 
 ```
 slugify-demo/
+├── WALKTHROUGH.md   # simulated transcript of TASK-001 — every skill→skill handoff, step by step
 ├── tasks/TASK-001/
 │   ├── task.md      # shared state — the full pipeline log (spec→plan→debug→coding→review)
 │   ├── spec.md      # R1–R4 requirements, AC1–AC5 acceptance criteria (all ticked)
@@ -19,7 +20,10 @@ slugify-demo/
 └── tests/test_slugify.py
 ```
 
-Start with `tasks/TASK-001/task.md` to see how state flows between stages, then
+Start with `WALKTHROUGH.md` for the simulated session — it shows each skill
+finishing, asking the user, and invoking the next skill with its artifact as
+the handoff payload (including `debug` interrupting `coding` and handing back).
+Then read `tasks/TASK-001/task.md` to see how state flows between stages, and
 follow the cross-references (`R#` / `AC#` / `S#` / `BUG#`) between the files —
 notably how `plan.md` predicted the exact risk that later became `BUG1`.
 

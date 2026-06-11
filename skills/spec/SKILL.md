@@ -14,7 +14,7 @@ Goal: turn a spec into a precise, shared understanding **before** designing or c
 
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This skill **opens the task**.
-- **Hydrate:** if continuing an existing task, read `tasks/TASK-<ID>/task.md` + `spec.md`; otherwise pick a new `TASK-<ID>` and create the folder. Read `docs/onboarding/*` if present.
+- **Hydrate:** if continuing an existing task, read `tasks/TASK-<ID>/task.md` + `spec.md`; otherwise pick a new `TASK-<ID>` and create the folder. Read `docs/onboarding/*` if present; if those docs are missing and the codebase is unfamiliar, offer to run `explore-source` first — its output is the convention reference for every later stage.
 - **Checkpoint:** create/update `task.md` (the shared state file) alongside `spec.md` — set `stage: spec`, `spec` artifact status `draft`→`confirmed`, bump `updated:`, append a Pipeline Log line.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 

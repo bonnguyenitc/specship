@@ -13,7 +13,17 @@ spec ──▶ plan ──▶ coding ──▶ review ──▶ done
                     └─ debug ◀──┘   (debug attaches to the task whenever a defect appears)
 ```
 
-Each arrow is a checkpoint: the skill asks the user before auto-advancing to the next.
+Each arrow is a checkpoint **and a handoff**: no skill ends silently. On finishing, every skill (1) names its successor and asks the user, and (2) if the user agrees, **invokes that skill directly** (via the Skill tool) so the flow continues without the user re-asking. The successor always consumes the predecessor's artifact — that artifact, not the conversation, is the handoff payload.
+
+| Finishing skill | Suggests next | Handoff payload |
+|---|---|---|
+| `explore-source` | `spec` (start a task) | `docs/onboarding/*` |
+| `spec` | `plan` | `spec.md` (R#/AC#) |
+| `plan` | `coding` | `plan.md` (S# → covers R#/AC#) |
+| `coding` | `review` | code + ticked `S#` in `plan.md` |
+| `review` (approved) | — done | commit/PR draft in `review.md` |
+| `review` (changes-requested) | `coding` (or `debug` for a defect) | Findings in `review.md` |
+| `debug` | the stage it interrupted (or `review` if standalone) | `BUG#` in `debug.md` + regression test |
 
 ## Task folder layout
 

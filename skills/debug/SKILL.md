@@ -64,5 +64,11 @@ Update the entry's `status` as you go, and bump `updated:` on each change so the
 
 ## When done
 - State plainly: reproduced? root cause found? fix verified with the full suite green?
-- If this happened during `coding`/`review`, return to that flow once the bug is fixed and its regression test passes.
 - **Do not run `git add` / `commit` / `push`** unless the user asks.
+
+## Next step
+The `BUG#` entry and its regression test are the input for whatever stage resumes.
+
+- **Interrupted `coding` or `review`** — once the fix is verified, **ask the user whether to resume that stage** — e.g. "Bug đã fix xong, bạn có muốn tôi tiếp tục coding/review không?". If yes, **immediately invoke that skill** (via the Skill tool); it re-hydrates from `task.md` and picks up where it left off.
+- **Standalone bugfix** (no interrupted stage) — suggest the `review` skill to run the full gate and draft the commit message before handing off.
+- If the user declines, stop here.

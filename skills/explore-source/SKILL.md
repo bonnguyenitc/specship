@@ -16,7 +16,7 @@ Goal: turn an unfamiliar repo into a clear mental model fast. Read before you ch
 For anything beyond a tiny repo, **don't read the whole codebase in the main thread** — it floods the context. Spawn the built-in **Explore** agent (or `general-purpose` for multi-step research) to do the wide fan-out reads and return only conclusions, keeping this thread clean.
 
 - **When:** a large/unfamiliar repo, or a broad question ("where is X handled across the codebase?", "what are all the entry points?").
-- **How:** run the steps below as a brief for the agent. Give it a focused goal and ask for a **structured result**, not file dumps — e.g. "List every top-level dir with its role and the key entry file (`path:line`)" or "Find where auth is enforced; return the call chain."
+- **How:** run the steps below as a brief for the agent. Give it a focused goal and ask for a **structured result**, not file dumps — e.g. "List every top-level dir with its role and the key entry file (path + entry symbol)" or "Find where auth is enforced; return the call chain."
 - **Parallelize** independent sweeps (structure, entry points, conventions) as separate agent runs when it speeds things up.
 - **Then** synthesize the agents' findings into the onboarding docs yourself. You own the writing and the verification — spot-check anything an agent claims before citing it.
 - For a small repo, just do it inline; spawning an agent isn't worth the cold-start cost.
@@ -68,7 +68,7 @@ rtk ls .
 This skill produces **four Markdown files** in `docs/onboarding/`. Create the directory if missing, and overwrite existing files (they are regenerated docs). Use the **exact templates below** — fixed frontmatter and headings — so the docs stay consistent across regenerations and other skills (`spec`, `plan`, `coding`) can rely on their structure.
 
 Rules for all four files:
-- Every claim must come from files you actually read — cite sources as `path/to/file.ext:line`; never invent paths.
+- Every claim must come from files you actually read — cite sources as `path/to/file.ext`, plus a named anchor (`function`/`class`/config key) when pointing inside a file. **Never cite line numbers** — they drift as soon as the code changes. Never invent paths.
 - Set `updated:` in the frontmatter to the current date-time (`YYYY-MM-DD HH:MM +TZ`, from `date` — don't guess).
 - Keep every template heading, in order. If a section has nothing, write `_None found._` instead of deleting it.
 - Mark anything you couldn't confirm with `(unverified)` rather than guessing.
@@ -90,7 +90,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 ## Stack
 | Layer | Choice | Version | Source |
 |---|---|---|---|
-| Language | <TypeScript> | <5.x> | `package.json:5` |
+| Language | <TypeScript> | <5.x> | `package.json` (`devDependencies.typescript`) |
 | Framework | | | |
 | Package manager | | | |
 | Runtime / infra | | | |
@@ -99,15 +99,15 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 <the layers and how they connect — 3–6 bullets>
 
 ### A typical flow
-<one real request/flow traced end-to-end, `path:line` at each hop>
-1. <entry> — `path:line`
-2. <handler> — `path:line`
-3. <service / data layer> — `path:line`
+<one real request/flow traced end-to-end, `path` (`symbol`) at each hop>
+1. <entry> — `path` (`symbol`)
+2. <handler> — `path` (`symbol`)
+3. <service / data layer> — `path` (`symbol`)
 
 ## External Dependencies
 | Dependency | Kind | Used for | Where wired |
 |---|---|---|---|
-| <Postgres> | DB | <persistence> | `path:line` |
+| <Postgres> | DB | <persistence> | `path` (`symbol`) |
 
 ## Open Questions
 - <anything unverified or ambiguous>
@@ -135,14 +135,14 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 ## Entry Points
 | Entry | File | Triggered by |
 |---|---|---|
-| <web server> | `src/index.ts:1` | `npm start` |
+| <web server> | `src/index.ts` | `npm start` |
 
 ## Special Conventions
 - `<folder>/` — <naming/ordering rule that applies inside it>
 ```
 
 ### `docs/onboarding/how-to-code.md`
-The day-to-day dev guide. It must answer three questions concretely: **where to put code, how to write it cleanly, and which rules to follow.** Conventions are learned from the actual code, not generic advice — each one needs a real example (`path:line`). When the repo's own conventions are unclear, say so and recommend a sensible default rather than inventing a rule — but always prefer matching existing code over imposing a new style.
+The day-to-day dev guide. It must answer three questions concretely: **where to put code, how to write it cleanly, and which rules to follow.** Conventions are learned from the actual code, not generic advice — each one needs a real example (`path` + named symbol). When the repo's own conventions are unclear, say so and recommend a sensible default rather than inventing a rule — but always prefer matching existing code over imposing a new style.
 
 ```markdown
 ---
@@ -169,7 +169,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 ## Where to Put Code
 | Task | Location | Copy the pattern from |
 |---|---|---|
-| New feature | `<folder>` | `path:line` |
+| New feature | `<folder>` | `path` (`symbol`) |
 | API endpoint | | |
 | Model / schema | | |
 | Shared util | | |
@@ -180,7 +180,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 <indent, quotes, semicolons, line length — from `.prettierrc` / `.editorconfig` / formatter config; if none, infer from the code and mark `(unverified)`>
 
 ### Naming
-<files, functions, variables, components — with a real example `path:line`>
+<files, functions, variables, components — with a real example `path` (`symbol`)>
 
 ### Module size & responsibility
 <single responsibility, when/where to split>
@@ -189,7 +189,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 <e.g. don't call the DB from a controller — go through a service>
 
 ### Errors, logging, typing
-<the patterns the codebase already uses, `path:line`>
+<the patterns the codebase already uses, `path` (`symbol`)>
 
 ### Imports & path aliases
 <ordering, aliases like `@/`>
@@ -224,16 +224,22 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 
 ## Build & Deploy Pipeline
 <steps from CI/Docker/Makefile, each citing its source>
-1. <step> — `.github/workflows/<file>:line`
+1. <step> — `.github/workflows/<file>` (`<job/step name>`)
 
 ## Required Env Vars / Secrets
 Names only — **never values**.
 | Name | Used by | Required in |
 |---|---|---|
-| `DATABASE_URL` | `path:line` | all envs |
+| `DATABASE_URL` | `path` (`symbol`) | all envs |
 
 ## Rollback / On-call
 - <if documented; else _Not documented._>
 ```
 
 After writing, give the user a short summary of what each file covers and list any **open questions** — undocumented or ambiguous areas worth confirming with the team.
+
+## Next step
+These four docs are the convention reference every task skill hydrates from (`spec`, `plan`, `coding`, `review` all read `docs/onboarding/*`). Once they're written, **ask the user whether there's a feature/ticket to start** — e.g. "Bạn có muốn bắt đầu một task với /spec không?".
+
+- If yes, **immediately invoke the `spec` skill** (via the Skill tool) — it opens `tasks/TASK-<ID>/` and builds on these docs.
+- If not, stop here — the docs stand alone as onboarding material.
