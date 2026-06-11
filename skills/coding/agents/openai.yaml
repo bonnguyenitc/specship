@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coding"
+  short_description: "Implement an approved plan step by step, verifying each step"
+  default_prompt: "Use $coding to implement the approved plan surgically, matching existing conventions, and run each step's success check."

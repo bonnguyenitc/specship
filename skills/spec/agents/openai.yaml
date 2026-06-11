@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec"
+  short_description: "Understand a spec, ticket, or PRD before planning or coding"
+  default_prompt: "Use $spec to read and fully understand the requirements — goals, acceptance criteria, edge cases, open questions — before any planning or coding."

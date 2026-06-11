@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan"
+  short_description: "Design a step-by-step implementation plan from an understood spec"
+  default_prompt: "Use $plan to turn the understood spec into an ordered, verifiable step-by-step plan with files to touch, approach, tradeoffs, and per-step success checks."

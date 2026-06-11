@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review"
+  short_description: "Self-review the diff, run the full gate, verify acceptance criteria"
+  default_prompt: "Use $review to wrap up the change: self-review the diff, run the full test/lint gate, verify every acceptance criterion, then prepare the commit/PR."

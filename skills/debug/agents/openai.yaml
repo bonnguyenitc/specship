@@ -1,0 +1,4 @@
+interface:
+  display_name: "Debug"
+  short_description: "Diagnose and fix a bug methodically, tracked in the owning task"
+  default_prompt: "Use $debug to reproduce a defect, find the root cause, fix it minimally, verify, and record the investigation in tasks/TASK-<ID>/debug.md."

@@ -7,6 +7,9 @@ const PKG_ROOT = path.join(__dirname, '..');
 const MARK_START = '<!-- specship:start -->';
 const MARK_END = '<!-- specship:end -->';
 const IGNORE = new Set(['__pycache__', '.DS_Store']);
+// Per-vendor skill manifests live in `<skill>/agents/`; only the target's own
+// file is installed (see `manifest` in targets.js), so each agent gets its format.
+const VENDOR_DIR = 'agents';
 
 function copyFile(src, dest, force, acc) {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -18,16 +21,28 @@ function copyFile(src, dest, force, acc) {
   acc.written++;
 }
 
-function copyDir(src, dest, force, acc = { written: 0, skipped: 0 }) {
+function copyDir(src, dest, force, acc = { written: 0, skipped: 0 }, { skipDirs } = {}) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     if (IGNORE.has(entry.name)) continue;
+    if (entry.isDirectory() && skipDirs && skipDirs.has(entry.name)) continue;
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
-    if (entry.isDirectory()) copyDir(s, d, force, acc);
+    if (entry.isDirectory()) copyDir(s, d, force, acc, { skipDirs });
     else copyFile(s, d, force, acc);
   }
   return acc;
+}
+
+// Copy each skill's vendor manifest (`<skill>/agents/<manifestName>`) for one target.
+function copyManifests(srcSkills, destSkills, manifestName, force, acc) {
+  for (const entry of fs.readdirSync(srcSkills, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const m = path.join(srcSkills, entry.name, VENDOR_DIR, manifestName);
+    if (fs.existsSync(m)) {
+      copyFile(m, path.join(destSkills, entry.name, VENDOR_DIR, manifestName), force, acc);
+    }
+  }
 }
 
 // Insert/replace an idempotent specship marker block in an existing file,
@@ -66,7 +81,12 @@ function initTarget(name, projectDir, { force = false } = {}) {
   const t = TARGETS[name];
   const lines = [];
 
-  const r = copyDir(path.join(PKG_ROOT, 'skills'), path.join(projectDir, t.skillsDest), force);
+  const srcSkills = path.join(PKG_ROOT, 'skills');
+  const destSkills = path.join(projectDir, t.skillsDest);
+  // The shared skill tree goes to every agent; the per-vendor `agents/` manifests
+  // are skipped here and only the target's own one is copied (if any).
+  const r = copyDir(srcSkills, destSkills, force, undefined, { skipDirs: new Set([VENDOR_DIR]) });
+  if (t.manifest) copyManifests(srcSkills, destSkills, t.manifest, force, r);
   let s = `skills  → ${t.skillsDest}/ (${r.written} written`;
   if (r.skipped) s += `, ${r.skipped} kept — use --force to overwrite`;
   lines.push(s + ')');

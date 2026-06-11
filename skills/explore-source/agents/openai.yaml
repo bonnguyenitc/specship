@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explore Source"
+  short_description: "Map an unfamiliar codebase for onboarding"
+  default_prompt: "Use $explore-source to map the codebase — stack, architecture, entry points, conventions, and how to run and test it — for onboarding."

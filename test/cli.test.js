@@ -73,6 +73,15 @@ test('--all installs each agent at its native paths', () => {
   assert.ok(fs.existsSync(path.join(d, '.agent/rules/specship.md')));
 });
 
+test('openai.yaml manifest installs for codex only', () => {
+  const d = tmp();
+  af(['init', '--all'], d);
+  assert.ok(fs.existsSync(path.join(d, '.codex/skills/spec/agents/openai.yaml')), 'codex gets manifest');
+  assert.ok(!fs.existsSync(path.join(d, '.claude/skills/spec/agents/openai.yaml')), 'claude skips it');
+  assert.ok(!fs.existsSync(path.join(d, '.cursor/skills/spec/agents')), 'cursor skips it');
+  assert.ok(!fs.existsSync(path.join(d, '.agent/skills/spec/agents')), 'antigravity skips it');
+});
+
 test('installed skills reference resolves (../WORKFLOW.md)', () => {
   const d = tmp();
   af(['init', '--codex'], d);
