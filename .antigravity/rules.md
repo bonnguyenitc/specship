@@ -16,10 +16,12 @@ For any non-trivial change, follow the staged workflow defined in
    - `coding` → implement (TDD or conventional), tick `S#`
    - `review` → run the full gate, verify every `AC#` → `tasks/TASK-<ID>/review.md`
    - `debug` → when a defect appears, log it in `tasks/TASK-<ID>/debug.md`, fix, resume
+   - `ship` → autopilot: given a feature request, run spec → plan → coding → review end-to-end
 3. Maintain the shared state in `tasks/TASK-<ID>/`: read `task.md` on start, update
    it on finish; keep IDs (`R#`/`AC#`/`S#`/`BUG#`) stable; timestamp every log entry
    as `YYYY-MM-DD HH:MM +TZ` (get it from `date`, don't guess).
-4. Ask the user before auto-advancing to the next stage.
+4. Ask the user before auto-advancing to the next stage (under `ship`, auto-advance
+   instead — stop only on blockers).
 
 Conventions live in `docs/onboarding/` — read `how-to-code.md` before writing code
 and `source-structure.md` to decide where it goes. Only the pipeline stages write

@@ -70,7 +70,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
-Keep it minimal and surgical: every step must list at least one `covers:` ID. For non-trivial plans, present it for approval before coding (use EnterPlanMode when appropriate). Set `status: approved` once the user approves.
+Keep it minimal and surgical: every step must list at least one `covers:` ID. For non-trivial plans, present it for approval before coding (use EnterPlanMode when appropriate). Set `status: approved` once the user approves. (Under `ship`, approval is delegated: set `status: approved` directly and log it.)
 
 When the plan changes (including after a `spec.md` update), edit it in place: bump `updated:`, append a dated **Change History** line, keep `S#` IDs stable.
 
@@ -79,3 +79,4 @@ Once the plan is approved, **ask the user whether they want to start implementin
 
 - If the user agrees, **immediately invoke the `coding` skill** (via the Skill tool) and continue into implementation in the same flow — don't make them ask again.
 - If the user declines or wants to revise the plan first, stop here.
+- Under `ship` (autopilot), skip the question and invoke `coding` directly.

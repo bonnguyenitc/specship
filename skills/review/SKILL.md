@@ -88,4 +88,4 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 
 ## Next step
 - **`approved`** — the task is done: hand the user the drafted commit/PR message; they run git themselves.
-- **`changes-requested`** — ask the user whether to loop back: invoke the `coding` skill to address the Findings (or `debug` if a finding is a defect), then re-run this review. Keep the same `TASK-<ID>`; the Findings are the input for the fix.
+- **`changes-requested`** — ask the user whether to loop back: invoke the `coding` skill to address the Findings (or `debug` if a finding is a defect), then re-run this review. Keep the same `TASK-<ID>`; the Findings are the input for the fix. (Under `ship`, loop back automatically — its loop cap applies.)

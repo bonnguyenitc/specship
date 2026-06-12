@@ -7,7 +7,8 @@ review** (+ `debug` when a defect appears). The full contract is in
 
 These are native Claude Code skills — invoke `/spec`, `/plan`, `/coding`,
 `/review`, `/debug`, `/explore-source`, or just describe the task and they
-auto-trigger.
+auto-trigger. `/ship <feature request>` is the autopilot: it runs spec → plan →
+coding → review (+ debug) end-to-end without asking at each stage.
 
 Maintain the shared task state in `tasks/TASK-<ID>/` as the contract specifies:
 read `task.md` on start, update it on finish; keep IDs (`R#`/`AC#`/`S#`/`BUG#`)

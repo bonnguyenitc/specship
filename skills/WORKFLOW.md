@@ -15,6 +15,8 @@ spec ──▶ plan ──▶ coding ──▶ review ──▶ done
 
 Each arrow is a checkpoint **and a handoff**: no skill ends silently. On finishing, every skill (1) names its successor and asks the user, and (2) if the user agrees, **invokes that skill directly** (via the Skill tool) so the flow continues without the user re-asking. The successor always consumes the predecessor's artifact — that artifact, not the conversation, is the handoff payload.
 
+**Autopilot:** the `ship` skill is an orchestrator, not a stage — given a feature request it runs `spec → plan → coding → review` (+ `debug`) in one run, carrying the user's consent for every handoff above. Stages invoked under `ship` skip their "ask the user" step and auto-advance (each auto-advance still gets a Pipeline Log line); every other rule in this contract applies unchanged. `ship` never runs `explore-source`.
+
 | Finishing skill | Suggests next | Handoff payload |
 |---|---|---|
 | `explore-source` | `spec` (start a task) | `docs/onboarding/*` |

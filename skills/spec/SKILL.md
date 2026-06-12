@@ -96,3 +96,4 @@ Once the understanding is confirmed (open questions resolved or acknowledged), *
 
 - If the user agrees, **immediately invoke the `plan` skill** (via the Skill tool) and continue into planning in the same flow — don't make them ask again.
 - If the user declines or wants to revise the spec first, stop here.
+- Under `ship` (autopilot), skip the question and invoke `plan` directly — unless a blocker `Q#` is open, which always stops for the user.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ship"
+  short_description: "Run spec → plan → coding → review end-to-end from a feature request, no per-stage asking"
+  default_prompt: "Use $ship to take the given feature request through spec, plan, coding, and review (plus debug on defects) in one autopilot run, auto-advancing at every handoff and stopping only on blockers."

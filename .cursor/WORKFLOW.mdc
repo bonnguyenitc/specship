@@ -5,7 +5,8 @@ alwaysApply: true
 
 For any non-trivial change, follow `.cursor/skills/WORKFLOW.md` and the per-stage
 playbooks in `.cursor/skills/<stage>/SKILL.md` (spec → plan → coding → review;
-debug as needed).
+debug as needed; `ship` = autopilot that runs spec → plan → coding → review
+end-to-end from a feature request).
 
 Rules:
 - Maintain shared state in `tasks/TASK-<ID>/`: read `task.md` first, update it last.
@@ -14,5 +15,6 @@ Rules:
 - Timestamp every log entry as `YYYY-MM-DD HH:MM +TZ` (get it from `date`, don't guess).
 - Follow `docs/onboarding/how-to-code.md` for code style and placement; run
   `explore-source` to generate `docs/onboarding/*` if missing.
-- Only the pipeline stages write to `tasks/`. Ask the user before advancing stages.
+- Only the pipeline stages write to `tasks/`. Ask the user before advancing stages
+  (under `ship`, auto-advance instead — stop only on blockers).
 - Don't run git add / commit / push unless asked.

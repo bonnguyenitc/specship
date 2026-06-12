@@ -82,12 +82,22 @@ hypothesize the root cause → minimal fix → verify with the full suite → ke
 the regression test. Each investigation is a `BUG#` entry in `debug.md`; the
 task is `blocked` while a blocker bug is open.
 
+**`ship` — autopilot from feature request to reviewed change.** Hand it a
+request (`/ship implement login`), ticket, or PRD and it runs the whole
+pipeline — `spec → plan → coding → review` (+ `debug` on defects) — in one go,
+auto-advancing where the stages would normally ask; non-blocking ambiguities
+become stated assumptions in the spec. It still stops for blocker questions,
+destructive actions, or a review that keeps failing, and it never runs git or
+`explore-source`.
+
 ### Checkpoints — the human stays in the driver's seat
 
 Stages never auto-advance. At the end of each stage the agent updates the
 shared state, summarizes, and **asks before moving on** (spec → "plan it?",
 plan → "start coding?", coding → "review it?"). Approve and it flows into the
 next stage immediately; decline and it stops with everything saved on disk.
+Invoking `ship` grants that approval up front for one task — the stages then
+auto-advance, stopping only on blockers.
 
 ### Contract rules (what makes handoffs work)
 

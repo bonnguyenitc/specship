@@ -24,7 +24,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Ask the user which approach they want** — e.g. "Bạn muốn code theo TDD hay cách thông thường?":
   - **TDD** — write a failing test first, then code to make it pass, then refactor (red → green → refactor).
   - **Thông thường (conventional)** — implement first, then add tests to verify.
-  - If the user has no preference, default to whatever the codebase already does (if tests are pervasive, lean TDD); otherwise conventional.
+  - If the user has no preference, default to whatever the codebase already does (if tests are pervasive, lean TDD); otherwise conventional. (Under `ship`, don't ask — apply this default directly.)
 
 ## Method — loop per step
 For each step in the plan, follow the chosen approach:
@@ -67,3 +67,4 @@ Once the implementation is complete, **ask the user whether they want to review 
 
 - If the user agrees, **immediately invoke the `review` skill** (via the Skill tool) and continue in the same flow — don't make them ask again.
 - If the user declines, stop here.
+- Under `ship` (autopilot), skip the question and invoke `review` directly.

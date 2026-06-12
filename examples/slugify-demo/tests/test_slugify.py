@@ -34,5 +34,19 @@ class TestSlugifyMaxLength(unittest.TestCase):     # TASK-002
         self.assertEqual(slugify("Café", max_length=10), "cafe")
 
 
+class TestSlugifySeparator(unittest.TestCase):     # TASK-003
+    def test_ac1_custom_separator(self):           # TASK-003 AC1
+        self.assertEqual(slugify("Hello World", separator="_"), "hello_world")
+
+    def test_ac2_collapses_runs(self):             # TASK-003 AC2
+        self.assertEqual(slugify("  Multiple   Spaces  ", separator="_"), "multiple_spaces")
+
+    def test_ac3_max_length_strips_separator(self):  # TASK-003 AC3
+        self.assertEqual(slugify("The Quick Brown Fox", max_length=9, separator="_"), "the_quick")
+
+    def test_ac4_default_unchanged(self):          # TASK-003 AC4
+        self.assertEqual(slugify("Hello World"), "hello-world")
+
+
 if __name__ == "__main__":
     unittest.main()
