@@ -1,19 +1,60 @@
-# specship
+<p align="center">
+  <img src="assets/logo-specship-full-bg.png" alt="specship logo" width="132" style="border-radius: 24px;">
+</p>
 
-Install a staged **spec → plan → coding → review** (+ `debug`) workflow into any
-project, wired for your AI coding agent. One command drops in the skill playbooks
-and the right config file at each agent's **native location**.
+<h1 align="center">specship</h1>
+
+<p align="center">
+  A staged <strong>spec → plan → coding → review</strong> workflow for shipping AI-assisted code with durable handoffs.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/specship"><img alt="npm package" src="https://img.shields.io/npm/v/specship?style=flat-square"></a>
+  <img alt="node version" src="https://img.shields.io/badge/node-%3E%3D16-222?style=flat-square">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-222?style=flat-square">
+</p>
+
+<p align="center">
+  <img src="assets/specship-banner.png" alt="specship — spec → plan → coding → review, then ship" width="100%" style="border-radius: 16px;">
+</p>
+
+## Why specship
+
+specship installs a repeatable agent workflow into any project. One command drops
+in the skill playbooks and writes the right config file at each AI coding
+agent's native location.
+
+| What you get | Why it matters |
+| --- | --- |
+| **Staged work** | Requirements, plans, code, and review each get their own explicit checkpoint. |
+| **Disk-backed state** | Any agent or human can resume from `tasks/TASK-<ID>/` without relying on chat history. |
+| **Native agent setup** | Claude Code, Codex, Cursor, and Antigravity receive their files in the paths they already expect. |
+| **Reviewable artifacts** | Specs, plans, bug logs, and review notes stay in the repo as durable project context. |
+
+## Quick Start
 
 ```bash
 npx specship init --claude        # Claude Code
-npx specship init --codex          # Codex
-npx specship init --cursor         # Cursor
-npx specship init --all            # all of the above (+ Antigravity)
+npx specship init --codex         # Codex
+npx specship init --cursor        # Cursor
+npx specship init --all           # all of the above (+ Antigravity)
 ```
 
-## The workflow
+After installing:
 
+1. Map the codebase once with `/explore-source`.
+2. Start a task with `/spec <ticket or feature request>`.
+3. Approve each checkpoint as the task flows through `plan → coding → review`.
+
+Use `ship` when you want the whole pipeline to run from one request:
+
+```bash
+/ship implement login
 ```
+
+## Workflow
+
+```text
 explore-source ──▶ docs/onboarding/*        (one-time: learn the codebase)
                         │  read by every stage
                         ▼
@@ -22,176 +63,135 @@ spec ──▶ plan ──▶ coding ──▶ review ──▶ done
                    └─ debug ◀──┘           (attaches whenever a bug appears)
 ```
 
-Every task lives in its own folder, **`tasks/TASK-<ID>/`**, where the stages
-cooperate through shared artifacts on disk:
+Every task lives in its own folder:
 
-```
+```text
 tasks/
 ├── LESSONS.md       # project-wide process lessons (L#), read by every stage
 └── TASK-001/
-    ├── task.md      # SHARED STATE — stage, status, pipeline log (source of truth)
+    ├── task.md      # SHARED STATE — stage, status, pipeline log
     ├── spec.md      # requirements (R#), acceptance criteria (AC#)
     ├── plan.md      # ordered steps (S#), each tracing to R#/AC#
     ├── review.md    # gate results, AC verification, commit/PR draft
     └── debug.md     # chronological bug log (BUG#)
 ```
 
-Because the state is on disk — not in a chat session — any agent (or human) can
+Because state is on disk, not hidden in a chat session, any agent or human can
 pick up a task exactly where the last one left off.
 
-### Stage by stage
+## Stages
 
-**0. `explore-source` — map the codebase (once per project).**
-Produces `docs/onboarding/{source-structure, how-to-code, what-is-stack,
-how-to-deploy}.md` — the convention reference every later stage reads. Run it
-once when adopting a project, commit the output.
+| Stage | Output | Done when |
+| --- | --- | --- |
+| `explore-source` | `docs/onboarding/{source-structure, how-to-code, what-is-stack, how-to-deploy}.md` | The codebase map exists and can be read by every later stage. |
+| `spec` | `tasks/TASK-<ID>/task.md` + `spec.md` | Requirements, acceptance criteria, boundaries, and open questions are `confirmed`. |
+| `plan` | `plan.md` | Ordered steps trace back to `R#`/`AC#` and each step has a verify check. |
+| `coding` | Code changes + checked-off `S#` items | Each planned step is implemented minimally and verified. |
+| `review` | `review.md` | The full gate passes, `AC#` items are verified, and a commit/PR draft is written. |
+| `debug` | `debug.md` | A defect is reproduced, fixed minimally, and verified with regression coverage when possible. |
+| `ship` | A complete task run | `spec → plan → coding → review` runs end to end, stopping only on blockers. |
 
-**1. `spec` — pin down *what* before *how*.**
-Reads the ticket/PRD/request, extracts the goal, testable requirements (`R#`),
-acceptance criteria (`AC#`), scope boundaries, and edge cases. Ambiguities
-become open questions (`Q#`) — asked, not silently assumed. Opens the task:
-creates `tasks/TASK-<ID>/` with `task.md` + `spec.md`. Done when the spec is
-`confirmed`.
+### Checkpoints
 
-**2. `plan` — design the implementation.**
-Reads `spec.md` and the onboarding docs, picks the simplest viable approach
-(stating tradeoffs if alternatives exist), and breaks the work into ordered
-steps (`S#`). Every step declares `covers: R#/AC#` — so each step traces to a
-requirement — and a **verify** check (test/command/behavior). Done when the
-plan is `approved`.
+Stages never auto-advance by default. At the end of each stage, the agent
+updates shared state, summarizes, and asks before moving on:
 
-**3. `coding` — execute the plan, one verifiable step at a time.**
-Reads `plan.md` + `spec.md` + `how-to-code.md`. Asks the user TDD or
-conventional, then loops per step: implement the minimum, run the step's verify
-check, tick `S#` in `plan.md` only when it passes. Surgical changes only —
-nothing the plan didn't call for. Truly independent steps (non-overlapping
-files) may fan out to parallel subagents, but the main thread integrates,
-verifies, and owns the state.
+```text
+spec → "plan it?"
+plan → "start coding?"
+coding → "review it?"
+```
 
-**4. `review` — from "code written" to "ready to ship".**
-Reads the diff against `spec.md`/`plan.md`/`how-to-code.md`. Runs the **full
-gate** (entire test suite + lint + format + type-check), verifies each `AC#`
-and ticks it in `spec.md`, checks style and plan deviations, then writes
-`review.md` with a **drafted** commit/PR message — the human runs git
-themselves. `approved` ends the task; `changes-requested` loops back to
-`coding` with the findings as input.
+Approving moves the task into the next stage. Declining stops with everything
+saved on disk. Invoking `ship` grants that approval up front for one task, then
+stops only on blocker questions, destructive actions, or review failures.
 
-**`debug` — attaches whenever a defect appears** (during coding, review, or
-later). Scientific method: reproduce (ideally as a failing test) → locate →
-hypothesize the root cause → minimal fix → verify with the full suite → keep
-the regression test. Each investigation is a `BUG#` entry in `debug.md`; the
-task is `blocked` while a blocker bug is open.
+## Commands
 
-**`ship` — autopilot from feature request to reviewed change.** Hand it a
-request (`/ship implement login`), ticket, or PRD and it runs the whole
-pipeline — `spec → plan → coding → review` (+ `debug` on defects) — in one go,
-auto-advancing where the stages would normally ask; non-blocking ambiguities
-become stated assumptions in the spec. It still stops for blocker questions,
-destructive actions, or a review that keeps failing, and it never runs git or
-`explore-source`.
+| Command | What it does |
+| --- | --- |
+| `init <agents>` | Install the workflow for `--claude`, `--codex`, `--cursor`, `--antigravity`, or `--all`. |
+| `update` | Refresh skills and config for whatever agents are already installed in the project. |
+| `list` | Show which agents are installed here. |
 
-### Checkpoints — the human stays in the driver's seat
+Options:
 
-Stages never auto-advance. At the end of each stage the agent updates the
-shared state, summarizes, and **asks before moving on** (spec → "plan it?",
-plan → "start coding?", coding → "review it?"). Approve and it flows into the
-next stage immediately; decline and it stops with everything saved on disk.
-Invoking `ship` grants that approval up front for one task — the stages then
-auto-advance, stopping only on blockers.
+| Option | Meaning |
+| --- | --- |
+| `--dir <path>` | Target project. Defaults to the current working directory. |
+| `--force` | Overwrite modified skill files. By default, local edits are kept. |
+| `-v`, `--version` | Print the CLI version. |
+| `-h`, `--help` | Print help. |
 
-### Contract rules (what makes handoffs work)
+```bash
+npx specship update
+npx specship list
+```
 
-- **`task.md` is the source of truth.** Every skill reads it first (hydrate)
-  and updates it last (checkpoint): stage, status, per-artifact status, and a
-  timestamped Pipeline Log line.
-- **IDs are stable and append-only.** `R#` requirement, `AC#` criterion, `S#`
-  step, `BUG#`. Never renumbered — downstream artifacts reference them; dropped
-  items are struck through with a timestamp, not deleted.
-- **Checkboxes are progress.** `coding` ticks `S#` in `plan.md`; `review` ticks
-  `AC#` in `spec.md`. Unticked = not done.
-- **Everything is timestamped** (`YYYY-MM-DD HH:MM +TZ`, taken from `date`,
-  never guessed) so changes are traceable and ordered within a day.
-- **Edit in place, never fork.** Artifacts evolve via `updated:` + Change
-  History lines — no `spec-v2.md`.
-- **Upstream change invalidates downstream.** If `spec.md` changes after the
-  plan exists, the plan/review may be stale — it's noted in the Pipeline Log
-  and revisited.
-- **Stage preconditions are enforced.** `plan` requires a `confirmed` spec,
-  `coding` an `approved` plan, `review` all `S#` ticked. A skill that finds its
-  precondition unmet runs the missing stage (or asks) — it never skips ahead
-  silently, and every transition, block, and loop-back leaves a Pipeline Log
-  trace.
-- **The flow learns from its own mistakes.** When a process error is detected
-  (skipped checkpoint, stale artifact, missing trace, guessed timestamp), the
-  skill fixes it and appends a lesson (`L#`) to `tasks/LESSONS.md` — which
-  every stage reads at hydrate, so the same mistake isn't repeated.
+## What `init` Installs
 
-The full contract is in `skills/WORKFLOW.md`; each stage's playbook is in
-`skills/<stage>/SKILL.md`.
+For each agent, `init` copies the skills to that agent's skills folder and
+writes or merges its config pointer at the correct native path.
 
-## What `init` installs
-
-For each agent, `init` copies the **skills** to that agent's skills folder and
-writes/merges its **config pointer** at the correct native path:
-
-| Agent | Skills → | Config →  | Mode |
-|-------|----------|-----------|------|
+| Agent | Skills | Config | Mode |
+| --- | --- | --- | --- |
 | `--claude` | `.claude/skills/` | `CLAUDE.md` | merge |
 | `--codex` | `.codex/skills/` | `AGENTS.md` | merge |
 | `--cursor` | `.cursor/skills/` | `.cursor/rules/specship.mdc` | write |
 | `--antigravity` | `.agent/skills/` | `.agent/rules/specship.md` | write |
 
-- **merge** = inserts an idempotent `<!-- specship:start -->…<!-- specship:end -->`
-  block into your existing file (re-running `init` updates the block, never
-  duplicates it). Creates the file if absent.
-- **write** = drops a standalone config file (e.g. a Cursor rule).
+`merge` inserts an idempotent `<!-- specship:start -->…<!-- specship:end -->`
+block into your existing file. Re-running `init` updates that block without
+duplicating it, and creates the file if absent.
 
-## Commands
+`write` drops a standalone config file, such as a Cursor rule.
 
-| Command | What it does |
-|---------|--------------|
-| `init <agents>` | Install the workflow for the given agents (`--claude`, `--codex`, `--cursor`, `--antigravity`, or `--all`) |
-| `update` | Refresh skills + config for whatever agents are **already** installed in the project |
-| `list` | Show which agents are installed here |
+## Contract Rules
 
-Options: `--dir <path>` (target project, default cwd) · `--force` (overwrite skill
-files you've modified — by default they're kept) · `-v, --version` · `-h, --help`.
+- **`task.md` is the source of truth.** Every skill reads it first and updates
+  it last with stage, status, artifact status, and a timestamped Pipeline Log
+  line.
+- **IDs are stable and append-only.** `R#`, `AC#`, `S#`, and `BUG#` are never
+  renumbered. Dropped items are struck through with a timestamp, not deleted.
+- **Checkboxes are progress.** `coding` ticks `S#` in `plan.md`; `review` ticks
+  `AC#` in `spec.md`. Unticked means not done.
+- **Everything is timestamped.** Timestamps use `YYYY-MM-DD HH:MM +TZ`, taken
+  from `date`, never guessed.
+- **Edit in place, never fork.** Artifacts evolve via `updated:` and Change
+  History lines. There is no `spec-v2.md`.
+- **Upstream changes invalidate downstream work.** If `spec.md` changes after
+  the plan exists, the plan or review may be stale and must be revisited.
+- **Stage preconditions are enforced.** `plan` requires a `confirmed` spec,
+  `coding` requires an `approved` plan, and `review` requires all `S#` items
+  ticked.
+- **The flow learns from its own mistakes.** Process errors become lessons in
+  `tasks/LESSONS.md`, which every stage reads during hydration.
 
-```bash
-npx specship update     # bump installed agents to the latest workflow
-npx specship list       # see what's installed
-```
-
-## After installing
-
-1. Map the codebase once → `/explore-source` (or have the agent follow
-   `<skills>/explore-source/SKILL.md`). This writes `docs/onboarding/*`, the
-   convention reference every later stage uses. Commit it.
-2. Per task: invoke `/spec` with the ticket (or just describe the feature — the
-   skills auto-trigger), then approve each checkpoint as the task flows through
-   `plan → coding → review`. Open `tasks/TASK-<ID>/task.md` anytime to see the
-   stage, status, and pipeline log.
+The full contract is in `skills/WORKFLOW.md`. Each stage playbook lives in
+`skills/<stage>/SKILL.md`.
 
 ## Example
 
-`examples/slugify-demo/` is a complete worked task (a `slugify()` utility) that
-ran the full pipeline — including a real bug caught during coding, root-caused
-and logged as `BUG1` in `debug.md`, then verified in review — with code and
-tests. Read its `tasks/TASK-001/*` to see every artifact in practice, and
-`tasks/LESSONS.md` for real `L#` process lessons recorded against the contract.
+`examples/slugify-demo/` is a complete worked task for a `slugify()` utility.
+It ran the full pipeline, including a real bug caught during coding,
+root-caused and logged as `BUG1` in `debug.md`, then verified in review.
 
-## Package layout (for contributors)
+Read `examples/slugify-demo/tasks/TASK-001/*` to see every artifact in practice,
+and `examples/slugify-demo/tasks/LESSONS.md` for process lessons recorded
+against the contract.
 
-```
-skills/                 # canonical skill playbooks (the source of truth, shipped to each agent)
+## Package Layout
+
+```text
+skills/                 # canonical skill playbooks shipped to each agent
 .claude/CLAUDE.md       # pointer template → installed as CLAUDE.md
 .codex/AGENTS.md        # pointer template → installed as AGENTS.md
 .cursor/WORKFLOW.mdc    # pointer template → installed as .cursor/rules/specship.mdc
 .antigravity/rules.md   # pointer template → installed as .agent/rules/specship.md
 bin/cli.js              # CLI entry
-src/                    # CLI logic — targets.js holds the source→dest mapping
-examples/slugify-demo/  # a complete worked task (not installed)
+src/                    # CLI logic; targets.js holds source→dest mappings
+examples/slugify-demo/  # complete worked task, not installed
 ```
 
-To add or re-map an agent, edit `src/targets.js` (one entry per agent) and add its
-pointer template — no other code changes needed.
+To add or re-map an agent, edit `src/targets.js` and add its pointer template.
+No other code changes are needed.
