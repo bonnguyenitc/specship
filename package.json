@@ -18,6 +18,15 @@
     ".antigravity",
     "README.md"
   ],
+  "author": "Thoai Nguyen",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bonnguyenitc/specship.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bonnguyenitc/specship/issues"
+  },
+  "homepage": "https://github.com/bonnguyenitc/specship#readme",
   "keywords": [
     "agent",
     "workflow",

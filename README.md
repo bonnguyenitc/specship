@@ -9,9 +9,18 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/specship"><img alt="npm package" src="https://img.shields.io/npm/v/specship?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/specship"><img alt="npm version" src="https://img.shields.io/npm/v/specship?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/specship"><img alt="npm downloads" src="https://img.shields.io/npm/dm/specship?style=flat-square"></a>
   <img alt="node version" src="https://img.shields.io/badge/node-%3E%3D16-222?style=flat-square">
-  <img alt="license" src="https://img.shields.io/badge/license-MIT-222?style=flat-square">
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-222?style=flat-square"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#workflow">Workflow</a> ·
+  <a href="#commands">Commands</a> ·
+  <a href="#contributing">Contributing</a> ·
+  <a href="https://github.com/bonnguyenitc/specship/releases">Changelog</a>
 </p>
 
 <p align="center">
@@ -32,6 +41,8 @@ agent's native location.
 | **Reviewable artifacts** | Specs, plans, bug logs, and review notes stay in the repo as durable project context. |
 
 ## Quick Start
+
+Requires [Node.js](https://nodejs.org) >= 16.
 
 ```bash
 npx specship init --claude        # Claude Code
@@ -167,18 +178,19 @@ duplicating it, and creates the file if absent.
 - **The flow learns from its own mistakes.** Process errors become lessons in
   `tasks/LESSONS.md`, which every stage reads during hydration.
 
-The full contract is in `skills/WORKFLOW.md`. Each stage playbook lives in
-`skills/<stage>/SKILL.md`.
+The full contract is in [skills/WORKFLOW.md](skills/WORKFLOW.md). Each stage
+playbook lives in `skills/<stage>/SKILL.md`.
 
 ## Example
 
-`examples/slugify-demo/` is a complete worked task for a `slugify()` utility.
-It ran the full pipeline, including a real bug caught during coding,
-root-caused and logged as `BUG1` in `debug.md`, then verified in review.
+[examples/slugify-demo/](examples/slugify-demo/) is a complete worked task for
+a `slugify()` utility. It ran the full pipeline, including a real bug caught
+during coding, root-caused and logged as `BUG1` in `debug.md`, then verified
+in review.
 
-Read `examples/slugify-demo/tasks/TASK-001/*` to see every artifact in practice,
-and `examples/slugify-demo/tasks/LESSONS.md` for process lessons recorded
-against the contract.
+Read `examples/slugify-demo/tasks/TASK-001/*` to see every artifact in
+practice, and `examples/slugify-demo/tasks/LESSONS.md` for process lessons
+recorded against the contract.
 
 ## Package Layout
 
@@ -195,3 +207,30 @@ examples/slugify-demo/  # complete worked task, not installed
 
 To add or re-map an agent, edit `src/targets.js` and add its pointer template.
 No other code changes are needed.
+
+## Contributing
+
+Bug reports and pull requests are welcome on
+[GitHub](https://github.com/bonnguyenitc/specship/issues).
+
+```bash
+git clone https://github.com/bonnguyenitc/specship.git
+cd specship
+npm test
+```
+
+- Keep changes small and focused; `npm test` must pass before and after.
+- CLI behavior lives in `src/` ([src/targets.js](src/targets.js) maps each
+  agent's source → destination paths).
+- Changes to the workflow itself belong in `skills/` — that is what `init`
+  ships to user projects.
+
+## Releases
+
+See [GitHub Releases](https://github.com/bonnguyenitc/specship/releases) for
+the changelog. specship follows [semver](https://semver.org); until 1.0,
+minor versions may include breaking changes.
+
+## License
+
+[MIT](LICENSE) © 2026 Thoai Nguyen
