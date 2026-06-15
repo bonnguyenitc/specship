@@ -29,10 +29,13 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 ## Method — loop per step
 For each step in the plan, follow the chosen approach:
 
-**If TDD:**
-1. **Red** — write a test that captures the step's expected behavior; run it and confirm it fails for the right reason.
-2. **Green** — write the minimum code to make the test pass. Nothing more.
-3. **Refactor** — clean up while keeping the test green; stay surgical.
+**If TDD** — work in **vertical slices, one behavior at a time** (the `tdd` skill has the full method; invoke it for depth):
+1. **Red** — write **one** test for the next behavior the step needs; run it and confirm it fails for the right reason. Test observable behavior through the **public interface**, not implementation details — so it survives a refactor.
+2. **Green** — write the **minimum** code to make that one test pass. Don't anticipate the next test.
+3. **Refactor** — only once green, clean up duplication while keeping tests green; stay surgical. **Never refactor while red.**
+4. **Loop** — repeat 1-3 for the step's next behavior. The first test is a tracer bullet that proves the path end-to-end; each later test responds to what the previous cycle taught you.
+
+> Anti-pattern — **don't** write all the step's tests first and then all the code ("horizontal slicing"). Tests written in bulk verify imagined behavior, not real behavior. One test → one bit of code → repeat.
 
 **If conventional:**
 1. **Implement** the minimum code that satisfies the step. No features, abstractions, or error handling beyond what's required.
