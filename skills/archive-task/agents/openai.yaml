@@ -1,0 +1,4 @@
+interface:
+  display_name: "Archive Task"
+  short_description: "Move a finished or abandoned task's folder into tasks/archive/, history intact, reversible"
+  default_prompt: "Use $archive-task to log a reason then move the named (or current) task folder into tasks/archive/, keeping its stage and artifacts intact for possible restore."

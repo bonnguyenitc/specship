@@ -20,7 +20,7 @@ Task state lives on disk (`tasks/TASK-<ID>/`), not in the chat session — that'
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `resume-task` reads the shared state and delegates; the stage skill it invokes does the writing.
 - **Hydrate:** read `tasks/LESSONS.md` if present (apply its rules) and the target task's `task.md` + its artifacts (below).
-- **Checkpoint:** `resume-task` itself writes nothing to `task.md`. Log one dated Pipeline Log line only if you **repair a missing trace** while reconstructing state (see `../WORKFLOW.md` → Flow integrity); otherwise the resumed stage skill does all the checkpointing.
+- **Checkpoint:** `resume-task` writes to `task.md` only to (a) **un-shelve** a task it's resuming (flip `paused`→`active`, or move a folder back out of `archive/` — see step 1) or (b) **repair a missing trace** while reconstructing state (see `../WORKFLOW.md` → Flow integrity). Both bump `updated:` and add a dated Pipeline Log line; it never touches `stage`/`artifacts:`. All pipeline checkpointing is the resumed stage skill's job.
 
 ## Method
 
@@ -28,9 +28,14 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `resum
 
 ### 1. Locate the task
 Resolve which `TASK-<ID>` to resume, in order:
-1. An explicit id argument (`007`, `7`, `TASK-007`, normalized as above) or one named in the conversation. If the normalized folder doesn't exist under `tasks/`, list the available tasks and ask — don't start a new one.
-2. Otherwise, scan `tasks/TASK-*/task.md` and pick the **most recently `updated:`** one. If several are close or any is `status: active`/`blocked`, **list the candidates** (id, title, stage, status, `updated:`) and let the user choose — don't silently guess.
-3. If `tasks/` has no task, say so and suggest `/spec <request>` (or `/ship`) to start one.
+1. An explicit id argument (`007`, `7`, `TASK-007`, normalized as above) or one named in the conversation. Look in `tasks/TASK-<ID>/` first; if not there, check `tasks/archive/TASK-<ID>/`. If found in neither, list the available tasks and ask — don't start a new one.
+2. Otherwise, scan `tasks/TASK-*/task.md` and pick the **most recently `updated:`** one. **Skip `tasks/archive/*` entirely, and don't auto-pick a `status: paused` task** — shelved tasks resume only when named explicitly. If several active tasks are close, **list the candidates** (id, title, stage, status, `updated:`) and let the user choose — don't silently guess.
+3. If `tasks/` has no live task, say so (mention any paused/archived ones, resumable by name) and suggest `/spec <request>` (or `/ship`) to start one.
+
+**Un-shelve before resuming.** If the chosen task is shelved, restore it first (get the real time, then log it), then continue. A task can be **both** archived *and* paused — apply every step that holds, in this order:
+- **archived** (found under `tasks/archive/`) → move the folder back to `tasks/TASK-<ID>/`, bump `updated:`, append `- <ts> restored from archive`.
+- **paused** (`status: paused` — check again after any move above) → set `status: active`, bump `updated:`, append `- <ts> resumed from pause`.
+Leave `stage` and `artifacts:` untouched — restoring changes only status/location. After un-shelving, `status` must be `active` (or `blocked`) before you resume — never resume a task still labelled `paused`.
 
 ### 2. Reconstruct state
 Read the chosen task's `task.md` (frontmatter `stage` / `status` / `artifacts`, the **Now** block, and the **Pipeline Log**), then the artifacts that matter for the current stage (`spec.md`, `plan.md`, `review.md`, `debug.md`). Cross-check that the recorded `stage`/`artifacts` match what's actually on disk — if they disagree, that's a missing/stale trace: repair it per the contract before resuming, and record a lesson.

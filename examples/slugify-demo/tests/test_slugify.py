@@ -48,5 +48,28 @@ class TestSlugifySeparator(unittest.TestCase):     # TASK-003
         self.assertEqual(slugify("Hello World"), "hello-world")
 
 
+class TestSlugifyWordBoundary(unittest.TestCase):  # TASK-004
+    def test_ac1_keeps_whole_words(self):          # TASK-004 AC1
+        self.assertEqual(
+            slugify("The Quick Brown Fox", max_length=12, word_boundary=True),
+            "the-quick",
+        )
+
+    def test_ac2_default_hard_cut_unchanged(self):  # TASK-004 AC2
+        self.assertEqual(slugify("The Quick Brown Fox", max_length=12), "the-quick-br")
+
+    def test_ac3_oversized_first_word_falls_back(self):  # TASK-004 AC3
+        self.assertEqual(
+            slugify("Supercalifragilistic", max_length=8, word_boundary=True),
+            "supercal",
+        )
+
+    def test_ac4_with_custom_separator(self):      # TASK-004 AC4
+        self.assertEqual(
+            slugify("The Quick Brown Fox", max_length=12, separator="_", word_boundary=True),
+            "the_quick",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

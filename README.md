@@ -63,6 +63,10 @@ Use `ship` when you want the whole pipeline to run from one request:
 /ship implement login
 ```
 
+Coming back later or setting work aside? `/resume-task` picks up where you left
+off, `/pause-task` shelves a task as `paused`, and `/archive-task` moves a
+finished one into `tasks/archive/` — see [Task lifecycle](#task-lifecycle).
+
 ## Workflow
 
 ```text
@@ -79,6 +83,8 @@ Every task lives in its own folder:
 ```text
 tasks/
 ├── LESSONS.md       # project-wide process lessons (L#), read by every stage
+├── archive/         # shelved tasks (archive-task) — skipped by active scans
+│   └── TASK-000/    # a whole task folder moved here intact
 └── TASK-001/
     ├── task.md      # SHARED STATE — stage, status, pipeline log
     ├── spec.md      # requirements (R#), acceptance criteria (AC#)
@@ -88,8 +94,56 @@ tasks/
 ```
 
 Because state is on disk, not hidden in a chat session, any agent or human can
-pick up a task exactly where the last one left off — `/resume-task` does exactly
-that: it locates the task, reports where it stands, and resumes the right stage.
+pick up a task exactly where the last one left off.
+
+### Task lifecycle
+
+A task has two independent axes:
+
+- **`stage`** — *where the work is* in the pipeline: `spec → plan → coding → review → done`.
+- **`status`** — *whether it's being worked on*: `active`, `blocked` (stuck on an
+  external dependency), `paused` (deliberately shelved), or `done`.
+
+The `status` axis moves like this (the `stage` axis is untouched throughout):
+
+```text
+                         pause-task
+            ┌──────────────────────────────────▶ paused
+  spec ──▶ active ◀──────────────────────────────┘
+            │  ▲              resume-task
+            │  │
+   stage    │  │  dependency appears / clears
+   skills   ▼  │
+          blocked
+
+  review approved:   active ──▶ done
+
+  archive-task:   any status ─────────────▶  archived  (folder → tasks/archive/)
+   active │ blocked │ paused │ done             │
+                                                │  resume-task <ID>
+                              active  ◀─────────┘  (move folder back + restore status)
+```
+
+- `active ↔ blocked` is set by the **stage skills** (a dependency appears /
+  clears) — not a lifecycle action.
+- `pause-task` / `resume-task` toggle `active ↔ paused`.
+- `archive-task` moves **any** status into `archive/`; `resume-task <ID>` moves it
+  back and re-activates it.
+
+Three lifecycle skills move a task around the pipeline **without ever changing its
+`stage` or artifacts** — they touch only `status` and location, and every
+transition leaves a dated Pipeline Log line:
+
+| Skill | Effect | Reverse |
+| --- | --- | --- |
+| `/resume-task [ID]` | Locate a task, reconstruct its state from disk, report where it stands, and resume the right stage. With no ID it picks the most recently updated **active** task (never an archived or `paused` one). | — (it's the entry point) |
+| `/pause-task [ID]` | Mark a task `status: paused` with a reason, leaving it in place. It won't be mistaken for active work or auto-picked. | `/resume-task <ID>` flips it back to `active`. |
+| `/archive-task [ID]` | Move a finished or abandoned task's folder into `tasks/archive/`, history intact, so active scans stay clean. Nothing is deleted. | `/resume-task <ID>` finds it in `archive/` and moves it back. |
+
+Pipeline state is always preserved: pausing, archiving, and restoring never change
+`stage` or any artifact — resuming continues exactly where the work stopped. A task
+that was both paused **and** archived is fully re-activated on resume (moved out of
+`archive/` *and* flipped back to `active`).
 
 ## Stages
 
@@ -102,7 +156,22 @@ that: it locates the task, reports where it stands, and resumes the right stage.
 | `review` | `review.md` | The full gate passes, `AC#` items are verified, and a commit/PR draft is written. |
 | `debug` | `debug.md` | A defect is reproduced, fixed minimally, and verified with regression coverage when possible. |
 | `ship` | A complete task run | `spec → plan → coding → review` runs end to end, stopping only on blockers. |
-| `resume-task` | Re-entry into an existing task | The task is located, its state reconstructed from disk, and the correct stage skill resumed. |
+
+`explore-source` and `ship` are not stages either: `explore-source` is a one-time
+codebase mapping that every stage reads, and `ship` is an orchestrator that runs
+the four stages back to back.
+
+### Lifecycle skills
+
+These manage a task's `status` and location around the pipeline — see
+[Task lifecycle](#task-lifecycle) for the full picture. They never change `stage`
+or artifacts.
+
+| Skill | Output | Done when |
+| --- | --- | --- |
+| `resume-task` | Re-entry into an existing task | The task is located (un-shelved first if paused/archived), its state reconstructed from disk and reported, and the correct stage skill resumed. |
+| `pause-task` | A task marked `paused` | The task is deliberately shelved with a reason; pipeline stage and artifacts are left intact for later resume. |
+| `archive-task` | A task moved to `tasks/archive/` | A finished or abandoned task is moved out of the active set, history preserved; `resume-task` can restore it. |
 
 ### Checkpoints
 
@@ -179,6 +248,10 @@ duplicating it, and creates the file if absent.
   ticked.
 - **The flow learns from its own mistakes.** Process errors become lessons in
   `tasks/LESSONS.md`, which every stage reads during hydration.
+- **Lifecycle changes preserve pipeline state.** `pause-task`, `archive-task`,
+  and `resume-task` change only `status`/location, never `stage` or artifacts,
+  and each transition logs a dated reason. Un-shelving fully re-activates a task
+  (out of `archive/` and back to `active`) before any stage resumes.
 
 The full contract is in [skills/WORKFLOW.md](skills/WORKFLOW.md). Each stage
 playbook lives in `skills/<stage>/SKILL.md`.

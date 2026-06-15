@@ -16,6 +16,7 @@ Goal: execute the approved plan into working, clean code — one verifiable step
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md`, `plan.md`, `spec.md`, and `docs/onboarding/how-to-code.md`. If `plan.md` is missing, run `plan` first.
 - **Checkpoint:** as steps pass, tick `S#` in `plan.md`; update `task.md` — set `stage: coding`, `coding` artifact `in-progress`→`done`, bump `updated:`, append a Pipeline Log line.
+- **Blocked?** If a step can't proceed because of an external dependency (an unmerged API, missing data/access, another team), set `status: blocked`, note it in `Blocked by:`, and log it; flip back to `active` when it clears. A *blocker bug* instead goes through `debug` (which sets `blocked` itself). `blocked` is involuntary — to set the task aside by choice, use `pause-task`. See `../WORKFLOW.md` → Status values.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
 ## Before you write

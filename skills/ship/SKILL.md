@@ -16,7 +16,7 @@ Goal: given a feature request (e.g. `/ship thực hiện chức năng login`), d
 
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. Every rule there (artifacts, IDs, preconditions, traces, lessons) applies unchanged; the only thing `ship` overrides is the per-handoff "ask the user" step.
-- **Hydrate:** if the request matches an existing task (explicit `TASK-<ID>`, or one in conversation), resume it from its current stage; otherwise the `spec` stage will open a new task. Read `tasks/LESSONS.md` if present.
+- **Hydrate:** if the request matches an existing task (explicit `TASK-<ID>`, or one in conversation), resume it from its current stage; otherwise the `spec` stage will open a new task. If that named task is shelved (`status: paused`, or found under `tasks/archive/`), un-shelve it first exactly as `resume-task` does (restore the folder and/or flip `paused`→`active`, with the dated log trace) before advancing. Read `tasks/LESSONS.md` if present.
 - **Checkpoint:** each stage skill does its own checkpointing. Additionally, log every auto-advance as a dated Pipeline Log line in `task.md`, e.g. `- <YYYY-MM-DD HH:MM +TZ> ship: auto-advanced spec → plan`.
 
 ## Method — run the stages

@@ -16,6 +16,7 @@ Goal: turn an understood spec into a concrete, ordered implementation plan — s
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md` + `spec.md`, plus `docs/onboarding/{source-structure,how-to-code}.md` if present. If `spec.md` is missing or `status: draft` with open blockers, run `spec` first.
 - **Checkpoint:** write `plan.md`, then update `task.md` — set `stage: plan`, `plan` artifact `draft`→`approved`, bump `updated:`, append a Pipeline Log line.
+- **Blocked?** If planning can't be finalized because of an unresolved **blocker `Q#`** or an external dependency (an API/data/decision the plan hinges on), set `status: blocked`, note it in `Blocked by:`, and log it; flip back to `active` when it clears. `blocked` is involuntary — to set the task aside by choice, use `pause-task`. See `../WORKFLOW.md` → Status values.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
 ## Method

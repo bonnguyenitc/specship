@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pause Task"
+  short_description: "Deliberately shelve a task as paused, with a reason, keeping all pipeline state intact"
+  default_prompt: "Use $pause-task to mark the named (or current) task status: paused with a reason in task.md, leaving its stage and artifacts untouched for later resume."

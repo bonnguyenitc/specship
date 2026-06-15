@@ -17,7 +17,7 @@ Each arrow is a checkpoint **and a handoff**: no skill ends silently. On finishi
 
 **Autopilot:** the `ship` skill is an orchestrator, not a stage — given a feature request it runs `spec → plan → coding → review` (+ `debug`) in one run, carrying the user's consent for every handoff above. Stages invoked under `ship` skip their "ask the user" step and auto-advance (each auto-advance still gets a Pipeline Log line); every other rule in this contract applies unchanged. `ship` never runs `explore-source`.
 
-**Re-entry:** the `resume-task` skill is the other non-stage entry point — given little or no context it locates an in-progress task, reconstructs its state from `task.md`, reports where it stands, and resumes the correct stage skill (the interactive counterpart to `ship`'s autopilot). It writes nothing to `tasks/` itself except to repair a missing trace; the resumed stage skill does the checkpointing.
+**Re-entry & lifecycle:** three non-stage skills manage a task's working lifecycle around the pipeline. `resume-task` locates an in-progress (or paused) task, reconstructs its state, reports where it stands, and resumes the correct stage skill (the interactive counterpart to `ship`). `pause-task` deliberately sets a task aside (`status: paused`). `archive-task` shelves a task out of the active set by moving its folder into `tasks/archive/`. `resume-task` writes to `tasks/` only to un-shelve the task it's resuming or repair a missing trace; `pause-task`/`archive-task` mutate `task.md`/the folder as their job — see "Task lifecycle".
 
 | Finishing skill | Suggests next | Handoff payload |
 |---|---|---|
@@ -34,6 +34,8 @@ Each arrow is a checkpoint **and a handoff**: no skill ends silently. On finishi
 ```
 tasks/
 ├── LESSONS.md       # project-wide process lessons (L#) — read by every skill (see "Lessons")
+├── archive/         # shelved tasks (see "Task lifecycle") — skipped by active scans
+│   └── TASK-<ID>/   # a whole task folder moved here intact, history preserved
 └── TASK-<ID>/
     ├── task.md      # SHARED STATE — index + state machine for the whole task (source of truth)
     ├── spec.md      # spec skill   — requirements (R#), acceptance criteria (AC#)
@@ -43,7 +45,7 @@ tasks/
 ```
 
 ### Choosing `TASK-<ID>`
-Reuse an existing ticket id (Jira/GitHub issue) → `TASK-PROJ-123`; otherwise the next sequential number by scanning `tasks/TASK-*` → `TASK-001`.
+Reuse an existing ticket id (Jira/GitHub issue) → `TASK-PROJ-123`; otherwise the next sequential number by scanning **both** `tasks/TASK-*` **and** `tasks/archive/TASK-*` (archived ids are retired, never reused) → `TASK-001`.
 
 ## The shared state file — `task.md`
 
@@ -54,7 +56,7 @@ The single source of truth for "where is this task". Every skill reads it first 
 task: TASK-<ID>
 title: <short title>
 stage: spec          # spec | plan | coding | review | done
-status: active       # active | blocked | done
+status: active       # active | blocked | paused | done
 created: <YYYY-MM-DD HH:MM +TZ>
 updated: <YYYY-MM-DD HH:MM +TZ>
 artifacts:           # value = that artifact's current status (filenames are fixed by the layout)
@@ -77,6 +79,41 @@ artifacts:           # value = that artifact's current status (filenames are fix
 - <YYYY-MM-DD HH:MM +TZ> coding: 3/5 steps done
 - <YYYY-MM-DD HH:MM +TZ> debug: BUG1 fixed
 ```
+
+## Task lifecycle (around the pipeline)
+
+A task's pipeline `stage` (spec…done) is *where the work is*; its `status` and location are *whether it's being worked on*.
+
+### Status values — what each means and who sets it
+
+The four `status` values are mutually exclusive. `active` and `blocked` are set by the **stage skills** as work proceeds; `paused` and the archived location are set by the **lifecycle skills**:
+
+| Status | Meaning | Set by | Left by |
+|---|---|---|---|
+| `active` | Being worked on now — the normal state while a stage runs. | `spec` on task creation; any stage or lifecycle skill that (re)starts work | moves to `blocked`/`paused`/`done`, or stays `active` across stage transitions |
+| `blocked` | **Involuntarily** stuck — work *cannot* proceed until something outside the stage's control clears: an open **blocker `Q#`** in `spec.md`, an open **blocker `BUG#`** in `debug.md`, or an external dependency (API, data, another team). Not a choice. | the stage skill that hits the block (`debug` sets it for an open blocker `BUG#`; `spec`/`plan`/`coding`/`review` set it for an unresolved blocker `Q#` or external dependency) | back to `active` by the stage skill once the blocker clears, then the stage resumes |
+| `paused` | **Deliberately** shelved to resume later — a choice, not a block. | `pause-task` | `resume-task` flips it back to `active` and continues the stage where it stopped |
+| `done` | Finished — `review` approved, all `AC#`/`S#` ticked, gate green. | `review` on approval (also sets `stage: done`) | `archive-task` to move it off the active list |
+
+**`blocked` vs `paused`** is the key distinction: `blocked` is *involuntary* (something is in the way and is recorded in `Blocked by:` / the open `Q#`/`BUG#`); `paused` is a *deliberate* shelving with a reason. Never use `blocked` to set work aside by choice — that's `pause-task`.
+
+**Setting / clearing `blocked` (every stage skill follows this):** when a stage can't move forward because of an open blocker `Q#`, an open blocker `BUG#`, or an external dependency, set `status: blocked`, write what's blocking it in the **Now** block's `Blocked by:` line, bump `updated:`, and append a dated Pipeline Log line (e.g. `- <ts> blocked: waiting on payments API access`). When the blocker clears, flip back to `active`, update `Blocked by: none`, log it, and resume the stage.
+
+### Shelving — `paused` and `archived`
+
+Two lifecycle skills manage *whether* a task is in the active set, without touching pipeline progress:
+
+| State | What it means | How it's set | How it's left |
+|---|---|---|---|
+| `status: paused` | Started, then **deliberately shelved** — work could resume any time. Distinct from `blocked` (stuck on an external dependency, not a choice). | `pause-task` | `resume-task` flips it back to `active` and continues the stage where it stopped |
+| **archived** (in `tasks/archive/<ID>/`) | Shelved out of the active set — the folder is moved aside, history intact. Typically a `done` task, or one abandoned. | `archive-task` | `resume-task <ID>` finds it in `archive/`, moves it back, and resumes |
+
+Rules:
+- **Pipeline state is preserved.** Pausing or archiving never changes `stage` or any `artifacts:` value — only `status`/location. Resuming picks up exactly where the work stopped.
+- **Every transition leaves a trace.** Each pause/archive/restore bumps `updated:` and appends a dated Pipeline Log line stating the reason (e.g. `- <ts> paused: waiting on design`, `- <ts> archived: superseded by TASK-012`, `- <ts> restored from archive`).
+- **Active scans skip the shelved.** When any skill auto-resolves "the most recently updated task" (`resume-task` with no id, a `ship`/stage hydrate, or `pause-task`/`archive-task` with no id), it ignores `tasks/archive/*` and does **not** auto-pick a `status: paused` task — those are acted on only when named explicitly.
+- **Un-shelving fully re-activates.** Whoever brings a shelved task back (`resume-task`, or `ship`/a stage resuming a named one) must leave it `active`/`blocked` — never resume a task still labelled `paused`. A task that was both paused *and* archived needs both undone: move it out of `archive/` **and** flip `status` back.
+- **Lifecycle skills may write `tasks/`.** Unlike `resume-task` (read-only bar trace repair), `pause-task` and `archive-task` legitimately mutate `task.md` / move the folder — that *is* their job.
 
 ## Shared-state protocol (every task skill follows this)
 
