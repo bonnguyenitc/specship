@@ -6,7 +6,8 @@ alwaysApply: true
 For any non-trivial change, follow `.cursor/skills/WORKFLOW.md` and the per-stage
 playbooks in `.cursor/skills/<stage>/SKILL.md` (spec → plan → coding → review;
 debug as needed; `ship` = autopilot that runs spec → plan → coding → review
-end-to-end from a feature request).
+end-to-end from a feature request; `resume-task` = re-entry that locates an
+in-progress task, reports where it stands, and resumes the right stage).
 
 Rules:
 - Maintain shared state in `tasks/TASK-<ID>/`: read `task.md` first, update it last.

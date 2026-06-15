@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resume Task"
+  short_description: "Pick up an in-progress task where it was left off — locate, report status, resume the right stage"
+  default_prompt: "Use $resume-task to locate the in-progress task, reconstruct its state from tasks/TASK-<ID>/, report where it stands, and resume the correct stage skill."

@@ -17,6 +17,8 @@ Each arrow is a checkpoint **and a handoff**: no skill ends silently. On finishi
 
 **Autopilot:** the `ship` skill is an orchestrator, not a stage — given a feature request it runs `spec → plan → coding → review` (+ `debug`) in one run, carrying the user's consent for every handoff above. Stages invoked under `ship` skip their "ask the user" step and auto-advance (each auto-advance still gets a Pipeline Log line); every other rule in this contract applies unchanged. `ship` never runs `explore-source`.
 
+**Re-entry:** the `resume-task` skill is the other non-stage entry point — given little or no context it locates an in-progress task, reconstructs its state from `task.md`, reports where it stands, and resumes the correct stage skill (the interactive counterpart to `ship`'s autopilot). It writes nothing to `tasks/` itself except to repair a missing trace; the resumed stage skill does the checkpointing.
+
 | Finishing skill | Suggests next | Handoff payload |
 |---|---|---|
 | `explore-source` | `spec` (start a task) | `docs/onboarding/*` |

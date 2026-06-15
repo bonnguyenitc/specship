@@ -12,6 +12,7 @@ For any non-trivial change, follow the staged workflow defined in
    - `review` → run the full gate, verify every `AC#` → `tasks/TASK-<ID>/review.md`
    - `debug` → when a defect appears, log it in `tasks/TASK-<ID>/debug.md`, fix, resume
    - `ship` → autopilot: given a feature request, run spec → plan → coding → review end-to-end
+   - `resume-task` → re-entry: locate an in-progress task, report where it stands, resume the right stage
 3. Maintain the shared state in `tasks/TASK-<ID>/`: read `task.md` on start, update
    it on finish; keep IDs (`R#`/`AC#`/`S#`/`BUG#`) stable; timestamp every log entry
    as `YYYY-MM-DD HH:MM +TZ` (get it from `date`, don't guess).

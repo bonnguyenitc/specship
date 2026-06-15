@@ -88,7 +88,8 @@ tasks/
 ```
 
 Because state is on disk, not hidden in a chat session, any agent or human can
-pick up a task exactly where the last one left off.
+pick up a task exactly where the last one left off — `/resume-task` does exactly
+that: it locates the task, reports where it stands, and resumes the right stage.
 
 ## Stages
 
@@ -101,6 +102,7 @@ pick up a task exactly where the last one left off.
 | `review` | `review.md` | The full gate passes, `AC#` items are verified, and a commit/PR draft is written. |
 | `debug` | `debug.md` | A defect is reproduced, fixed minimally, and verified with regression coverage when possible. |
 | `ship` | A complete task run | `spec → plan → coding → review` runs end to end, stopping only on blockers. |
+| `resume-task` | Re-entry into an existing task | The task is located, its state reconstructed from disk, and the correct stage skill resumed. |
 
 ### Checkpoints
 
