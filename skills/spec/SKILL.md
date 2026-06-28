@@ -28,7 +28,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This s
 ### 2. Extract the essentials
 - **Goal / why:** the problem being solved and the user value. One or two sentences.
 - **Functional requirements:** concrete, testable "the system shall…" statements.
-- **Acceptance criteria:** how we'll know it's done (mirror the spec's, or derive them).
+- **Acceptance criteria:** how we'll know it's done (mirror the spec's, or derive them). **Each `AC#` must be verifiable** — name the concrete check that proves it: a test, a command to run, or a specific observable behavior. An AC nobody can mechanically check is the weakest signal in the whole pipeline; if you can't state its check, it's still an open question, not an acceptance criterion.
 - **Scope boundaries:** what is explicitly *out* of scope.
 - **Constraints:** performance, security, compatibility, deadlines, tech stack limits.
 - **Edge cases & error states:** empty/invalid input, auth failures, concurrency, limits.
@@ -66,7 +66,8 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - R2: ...
 
 ## Acceptance Criteria
-- [ ] AC1: <how we'll know it's done>
+<!-- each AC states what's true when done AND how to verify it (test / command / observable behavior) -->
+- [ ] AC1: <observable outcome> → verify: <test to write / command to run / behavior to observe>
 - [ ] AC2: ...
 
 ## Out of Scope
@@ -83,7 +84,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
-Keep entries concise and verifiable. State assumptions explicitly. Set `status: confirmed` once open questions are resolved or acknowledged.
+Keep entries concise and verifiable. State assumptions explicitly. Set `status: confirmed` only once open questions are resolved or acknowledged **and every `AC#` carries a concrete `verify:` check** — that `verify:` is the handoff payload `plan` turns into step checks and `review` ticks against, so an AC without one cannot be confirmed.
 
 ### Updating an existing spec
 When the spec changes later, **edit `spec.md` in place** — don't start a new file. For every change:

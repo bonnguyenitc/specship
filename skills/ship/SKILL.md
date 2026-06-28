@@ -22,8 +22,8 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. Every 
 ## Method — run the stages
 Invoke each stage skill via the Skill tool, in order, starting from the first incomplete stage. Follow its playbook fully — artifacts, templates, gates, traces — **except its "ask the user" points, which `ship` overrides as follows:**
 
-1. **`spec`** — formalize the request into `tasks/TASK-<ID>/spec.md` (opens the task). Resolve what the request and the codebase answer; anything underspecified but non-blocking becomes a stated assumption (a non-blocker `Q#`). Set `status: confirmed` and continue. An open **blocker** `Q#` is a hard stop — blocker questions are the one thing autopilot never answers itself.
-2. **`plan`** — produce `plan.md` as the skill specifies. Approval is delegated: set `status: approved` directly (don't use EnterPlanMode) and log it. If planning surfaces something that changes the spec's scope, that's a hard stop, not a silent re-plan.
+1. **`spec`** — formalize the request into `tasks/TASK-<ID>/spec.md` (opens the task). Resolve what the request and the codebase answer; anything underspecified but non-blocking becomes a stated assumption (a non-blocker `Q#`). Set `status: confirmed` and continue. An open **blocker** `Q#` is a hard stop — blocker questions are the one thing autopilot never answers itself. **Verifiability gate (replaces the skipped human confirmation):** before auto-advancing, every `AC#` must carry a concrete `verify:` check (per the `spec` skill). Autopilot has no human sign-off to lean on here, so this objective check stands in for it — if any `AC#` has no runnable verify, that's a hard stop, not an auto-advance.
+2. **`plan`** — produce `plan.md` as the skill specifies. Approval is delegated: set `status: approved` directly (don't use EnterPlanMode) and log it. If planning surfaces something that changes the spec's scope, that's a hard stop, not a silent re-plan. **Verifiability gate:** before auto-advancing to `coding`, every `S#` must list at least one `covers:` ID **and an executable `verify:`** (a runnable command/test, not prose). A step whose check can't be run is a hard stop — autopilot won't hand the coding loop a blurry target.
 3. **`coding`** — don't ask TDD vs conventional: apply the skill's own default (whatever the codebase already does). Implement every `S#`, verify, tick.
 4. **`debug`** — on a non-obvious failure at any point, invoke `debug`, fix to root cause, then resume the interrupted stage directly — no "resume?" question.
 5. **`review`** — full gate + `AC#` verification.
@@ -33,6 +33,7 @@ Invoke each stage skill via the Skill tool, in order, starting from the first in
 ## Hard stops — hand back to the user
 Stop, checkpoint, and report (never push through) when:
 - A **blocker `Q#`** is open, or a stage reveals the spec's scope is wrong.
+- The **verifiability gate fails**: an `AC#` with no runnable `verify:`, or an `S#` with no executable `verify:` — autopilot can't self-confirm an unverifiable criterion, so it hands back instead of advancing blind.
 - The next action is **destructive or hard to reverse**: data/schema migrations on real data, deleting things the task didn't create, anything outward-facing.
 - The **review loop cap** is hit, or a gate can't be made green.
 - As always: **never run `git add` / `commit` / `push`** — `review.md` carries the drafted commit/PR message for the user.

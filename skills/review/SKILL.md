@@ -27,9 +27,17 @@ Read the files the earlier stages produced so the review is grounded, not generi
 - `tasks/TASK-<ID>/plan.md` — the intended approach and steps.
 - `docs/onboarding/how-to-code.md` + `source-structure.md` — the code-style and placement rules.
 
-### 1. Self-review the diff
+### 1. Review the diff — independent eyes for bugs, task-grounded eyes for fit
+
+Split the review by what kind of signal each check needs. **You wrote (or drove) this code, so you are the weakest judge of its correctness** — don't rely on re-reading your own diff to catch your own bugs. Get a fresh, context-free pass for that, and keep for yourself only the checks that need the task's context.
+
+**a. Delegate correctness bug-hunting to `/code-review`** (an independent reviewer with fresh context):
+- Invoke the `code-review` skill (via the Skill tool) at an appropriate effort — it reads the working diff and reports correctness bugs, missed edge cases, and reuse/simplification/efficiency findings without the bias of having just written the code.
+- Treat its output as input: fold every finding into your **Findings** below. For a genuine defect, hand it to `debug` (it gets a `BUG#` + regression test); don't just hand-wave it.
+
+**b. Keep the task-grounded checks here** (these need `spec.md`/`plan.md`/onboarding context that an independent pass doesn't have):
 - Read the full diff (`rtk git diff`). Check every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative.
-- Look for correctness bugs and missed edge cases (from `spec.md`), and reuse/simplification opportunities.
+- Cross-check the diff against each `spec.md` **edge case** — confirm it's actually handled, not just assumed.
 - Check the change followed the plan — note any deviation from `plan.md`.
 - **Check code style against `docs/onboarding/how-to-code.md`** — verify the documented rules: correct placement (right folder/file), naming, module size/responsibility, layer separation, error handling, logging, imports. Flag every deviation. If that file doesn't exist, fall back to matching neighbouring code.
 
@@ -39,7 +47,7 @@ Read the files the earlier stages produced so the review is grounded, not generi
 - **Don't proceed until these are green.** If something fails, report it plainly with the output and fix before continuing. For a non-obvious failure, use the `debug` skill (it records the fix in `tasks/TASK-<ID>/debug.md`) and resume the review.
 
 ### 3. Verify against acceptance criteria
-- Walk through each `AC#` in `spec.md` and confirm it's met; **tick it `- [x]`** when verified. Any unchecked `AC#` or `S#` means the work isn't done.
+- Walk through each `AC#` in `spec.md` and confirm it's met by **running its `verify:` check** (the test/command/observation the spec attached to it) — tick `- [x]` only on a green result, not on judgement, and quote the outcome. If an `AC#` has no `verify:`, that's a spec gap: flag it as a Finding and don't tick it on a guess. Any unchecked `AC#` or `S#` means the work isn't done.
 - For user-facing behavior, run the app and observe the actual result rather than trusting tests alone.
 
 ### 4. Update docs
@@ -69,7 +77,9 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - [ ] AC2 — <why not met>
 
 ## Findings
-- <bug / style deviation from how-to-code / plan deviation>, ref `path:line`
+<!-- source: code-review (independent) | self (task-grounded) -->
+- [code-review] <correctness bug / missed edge case / simplification>, ref `path:line`
+- [self] <style deviation from how-to-code / plan or spec-trace deviation>, ref `path:line`
 
 ## Commit / PR Draft
 <commit message; PR title + body if relevant>
