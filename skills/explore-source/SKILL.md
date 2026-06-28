@@ -34,7 +34,7 @@ Read manifests and docs first — they encode the intended setup.
 
 ```bash
 ls -la
-rtk find "package.json" ; rtk find "*.toml" ; rtk find "Makefile"
+find . -maxdepth 2 \( -name "package.json" -o -name "*.toml" -o -name "Makefile" \) -not -path "*/node_modules/*"
 ```
 
 ### 2. Map the structure
@@ -42,7 +42,7 @@ rtk find "package.json" ; rtk find "*.toml" ; rtk find "Makefile"
 - Name the role of each top-level dir (e.g. `src/`, `api/`, `web/`, `migrations/`, `tests/`).
 
 ```bash
-rtk ls .
+ls -la ; tree -L 2 2>/dev/null || find . -maxdepth 2 -type d -not -path "*/node_modules/*"
 ```
 
 ### 3. Find entry points & wiring
@@ -60,7 +60,7 @@ rtk ls .
 - External integrations: DB, cache, queues, third-party APIs, auth.
 
 ## Searching effectively
-- Use `rtk grep <pattern>` to find where a concept lives; for broad multi-location sweeps across naming conventions, spawn the **Explore** agent and ask only for conclusions.
+- Use `grep`/`rg <pattern>` to find where a concept lives; for broad multi-location sweeps across naming conventions, spawn the **Explore** agent and ask only for conclusions.
 - To answer "where is X handled?", grep the user-facing string or endpoint, then follow the call chain.
 
 ## Output: write the onboarding docs

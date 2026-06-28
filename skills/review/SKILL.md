@@ -36,14 +36,14 @@ Split the review by what kind of signal each check needs. **You wrote (or drove)
 - Treat its output as input: fold every finding into your **Findings** below. For a genuine defect, hand it to `debug` (it gets a `BUG#` + regression test); don't just hand-wave it.
 
 **b. Keep the task-grounded checks here** (these need `spec.md`/`plan.md`/onboarding context that an independent pass doesn't have):
-- Read the full diff (`rtk git diff`). Check every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative.
+- Read the full diff (`git diff`). Check every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative.
 - Cross-check the diff against each `spec.md` **edge case** — confirm it's actually handled, not just assumed.
 - Check the change followed the plan — note any deviation from `plan.md`.
 - **Check code style against `docs/onboarding/how-to-code.md`** — verify the documented rules: correct placement (right folder/file), naming, module size/responsibility, layer separation, error handling, logging, imports. Flag every deviation. If that file doesn't exist, fall back to matching neighbouring code.
 
 ### 2. Run the full gate
 - Run the **entire** test suite, not just the tests for the last step — catch regressions elsewhere.
-- Run lint, format check, and type-check as the project defines them. Use `rtk` wrappers (`rtk <test-runner>`, `rtk lint`, `rtk tsc`) for compact output.
+- Run lint, format check, and type-check as the project defines them (the exact commands from `docs/onboarding/how-to-code.md`).
 - **Don't proceed until these are green.** If something fails, report it plainly with the output and fix before continuing. For a non-obvious failure, use the `debug` skill (it records the fix in `tasks/TASK-<ID>/debug.md`) and resume the review.
 
 ### 3. Verify against acceptance criteria

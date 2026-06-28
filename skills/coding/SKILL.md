@@ -59,7 +59,7 @@ Only fan out to parallel subagents when the speed-up is real:
 ## Quality rules
 - **Simplicity first:** if it could be 50 lines, don't write 200.
 - **Match, don't impose:** follow existing style even if you'd personally differ.
-- **Run the gates:** lint, format, type-check, and tests as the project defines them. Use `rtk` wrappers (`rtk lint`, `rtk tsc`, `rtk <test-runner>`) for compact output.
+- **Run the gates:** lint, format, type-check, and tests as the project defines them (the exact commands from `docs/onboarding/how-to-code.md`).
 - Don't run `git add` / `commit` / `push` unless the user asks.
 
 ## When done

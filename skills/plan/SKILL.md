@@ -33,7 +33,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 
 ### 3. Break into steps
 - Order steps so each leaves the code in a working, testable state.
-- For each step define: **what changes**, **which files** (`path`), and a **verify** check. The `verify:` must be **executable, not a description** — a concrete command or test the coding loop can run and read a pass/fail from (`rtk <test-runner> path::case`, `rtk tsc`, `curl … | grep`, an assertion), not prose like "behavior works" or "looks correct". If a step's only honest check is a manual observation, name the **exact action and expected output** so it's still a binary check, not a vibe. A vague `verify:` hands the coding stage a strong loop pointed at a blurry target — it'll report "done" without proof.
+- For each step define: **what changes**, **which files** (`path`), and a **verify** check. The `verify:` must be **executable, not a description** — a concrete command or test the coding loop can run and read a pass/fail from (`<test-runner> path::case`, `tsc --noEmit`, `curl … | grep`, an assertion), not prose like "behavior works" or "looks correct". If a step's only honest check is a manual observation, name the **exact action and expected output** so it's still a binary check, not a vibe. A vague `verify:` hands the coding stage a strong loop pointed at a blurry target — it'll report "done" without proof.
 - **For a step that covers an `AC#`, its `verify:` should run (or extend) that AC's own `verify:` check from `spec.md`** — don't invent a parallel one. This is what carries the spec's acceptance check through to executable code and back up to `review`.
 - Call out data/schema migrations, API contract changes, and anything irreversible early.
 - Note risks, unknowns, and where you might need to revisit the spec.
@@ -63,7 +63,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 
 ## Steps
 <!-- verify: must be a runnable command/test with a pass/fail, not a description -->
-- [ ] S1 — <change> (covers: R1, AC1) → verify: <exact command/test to run, e.g. `rtk vitest auth.test.ts`>
+- [ ] S1 — <change> (covers: R1, AC1) → verify: <exact command/test to run, e.g. `vitest run auth.test.ts`>
 - [ ] S2 — <change> (covers: R2) → verify: ...
 
 ## Risks / Open Questions

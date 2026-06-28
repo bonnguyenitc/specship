@@ -27,7 +27,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug
 Work from evidence, one hypothesis at a time. Don't guess-and-change.
 
 1. **Reproduce** — get a reliable, minimal reproduction. Capture the exact error/stack, inputs, and environment. Ideally **write a failing test** that triggers the bug — it becomes the regression test.
-2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `rtk grep` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **Explore** / `general-purpose` agent and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread.
+2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `grep`/`rg` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **Explore** / `general-purpose` agent and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread.
 3. **Hypothesize** — state the suspected root cause explicitly before changing anything. Confirm it with evidence (a log, a value, a failing assertion), don't assume.
 4. **Fix** — apply the **minimum** change that addresses the root cause. Stay surgical; don't refactor unrelated code or fix symptoms downstream.
 5. **Verify** — the failing test now passes, the full suite stays green, and the original reproduction is gone.
