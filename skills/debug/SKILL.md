@@ -26,12 +26,12 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug
 ## Method — scientific debugging
 Work from evidence, one hypothesis at a time. Don't guess-and-change.
 
-1. **Reproduce** — get a reliable, minimal reproduction. Capture the exact error/stack, inputs, and environment. Ideally **write a failing test** that triggers the bug — it becomes the regression test.
+1. **Reproduce — no fix before a repro.** Get a reliable, minimal reproduction and **watch it fail for the expected reason** before touching any code; a fix you can't demonstrate failing is a guess. If you can't reproduce it, *that* is the investigation — add logging, tighten the conditions, gather evidence — don't "fix" what you can't observe. Capture the exact error/stack, inputs, and environment, and **write the failing test** that triggers the bug — it becomes the regression test. When `coding` hands off after its 3-attempt rule, start from its failing `verify:` command as the repro and **read what was already tried** — those disproven attempts are evidence, not a path to retread.
 2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `grep`/`rg` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **Explore** / `general-purpose` agent and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread.
-3. **Hypothesize** — state the suspected root cause explicitly before changing anything. Confirm it with evidence (a log, a value, a failing assertion), don't assume.
+3. **Hypothesize — one at a time, revert what fails.** State the suspected root cause explicitly before changing anything, and confirm it with evidence (a log, a value, a failing assertion), don't assume. If the evidence disproves it, **revert that attempt's changes before testing the next hypothesis** — stacked speculative edits pollute the diff and can mask the symptom without fixing the cause. Record each ruled-out hypothesis (and what disproved it) in the `BUG#` entry so the investigation survives interruption and nobody retreads it.
 4. **Fix** — apply the **minimum** change that addresses the root cause. Stay surgical; don't refactor unrelated code or fix symptoms downstream.
 5. **Verify** — the failing test now passes, the full suite stays green, and the original reproduction is gone.
-6. **Prevent regression** — keep the test that reproduces it. Note if the same bug class could exist elsewhere.
+6. **Prevent regression — and sweep for siblings.** Keep the test that reproduces it. Then hunt the same bug class elsewhere: `grep`/`rg` for the pattern the root cause exposed (same misused API, same copy-pasted logic, same unchecked input). Trivially-same instances: fix in this `BUG#`. Bigger ones: record them in `related:` as explicit follow-ups — a root cause usually has siblings, and finding them now is far cheaper than a second debug session later.
 
 If the root cause turns out to be a wrong/missing requirement, flag it back to `spec.md` (add an `R#`/edge case) rather than silently coding around it.
 
@@ -54,6 +54,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - date: <YYYY-MM-DD HH:MM +TZ>
 - symptom: <observed wrong behavior + error/stack>
 - reproduce: <steps / failing test that triggers it>
+- ruled out: <hypotheses tried and disproven, with the evidence — omit if none>
 - root cause: <the actual underlying cause, at `path:line`>
 - fix: <what changed and why, files touched>
 - regression test: <test name/path guarding it>

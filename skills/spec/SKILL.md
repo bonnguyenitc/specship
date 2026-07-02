@@ -23,19 +23,22 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This s
 
 ### 1. Read the source completely
 - Read the full spec/ticket and any linked docs, designs, or related issues.
-- If the spec references code areas, cross-check against the codebase (use the `explore-source` skill if the project is unfamiliar).
+- **Ground it in the actual code, not memory.** If the spec references code areas, open them: verify the named files/functions/flags exist, and record the **current behavior vs. desired behavior** delta — requirements stated against imagined code are the top source of misunderstood specs. Use the `explore-source` skill if the project is unfamiliar.
 
 ### 2. Extract the essentials
 - **Goal / why:** the problem being solved and the user value. One or two sentences.
 - **Functional requirements:** concrete, testable "the system shall…" statements.
-- **Acceptance criteria:** how we'll know it's done (mirror the spec's, or derive them). **Each `AC#` must be verifiable** — name the concrete check that proves it: a test, a command to run, or a specific observable behavior. An AC nobody can mechanically check is the weakest signal in the whole pipeline; if you can't state its check, it's still an open question, not an acceptance criterion.
+- **Acceptance criteria:** how we'll know it's done (mirror the spec's, or derive them). **Each `AC#` must be verifiable** — name the concrete check that proves it: a test, a command to run, or a specific observable behavior. An AC nobody can mechanically check is the weakest signal in the whole pipeline; if you can't state its check, it's still an open question, not an acceptance criterion. **Each `AC#` also names the `R#`(s) it covers, and every `R#` must be covered by at least one `AC#`** — an uncovered requirement is unverifiable by definition; either add an AC for it or question whether it's a real requirement.
 - **Scope boundaries:** what is explicitly *out* of scope.
 - **Constraints:** performance, security, compatibility, deadlines, tech stack limits.
 - **Edge cases & error states:** empty/invalid input, auth failures, concurrency, limits.
 - **Dependencies:** other teams, APIs, data, or tickets this relies on.
 
 ### 3. Find the gaps
-Actively hunt for ambiguity. For anything underspecified, **don't assume silently** — list it as an open question. If a question blocks understanding, ask the user before continuing.
+Actively hunt for ambiguity. For anything underspecified, **don't assume silently** — list it as an open question, and **give every `Q#` a proposed answer** (your best default + one line of why) so the user can confirm with a yes instead of designing the answer themselves. When you must ask, **batch all blocker `Q#`s into one message** — don't drip questions across turns. A resolved question whose answer you chose yourself becomes an entry in **Assumptions**, not silence.
+
+### 4. Right-size it
+Scale the spec to the task. A small, well-understood change gets a small spec — a couple of `R#`/`AC#` and empty sections marked `- none` — not padded prose. Never invent requirements, edge cases, or questions to fill the template; an inflated spec buries the real signal and costs every later stage.
 
 ## Output: treat it as a task and write the spec file
 Each spec is a **task**. Create the folder **`tasks/TASK-<ID>/`**, then write two files: the shared state file **`task.md`** (schema in `WORKFLOW.md` — this is the source of truth other skills read) and **`spec.md`** below. This is the shared artifact `plan`, `coding`, and `review` read — use the **exact template below** so other skills can parse and cross-reference it. Then show the user a short summary.
@@ -66,25 +69,30 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - R2: ...
 
 ## Acceptance Criteria
-<!-- each AC states what's true when done AND how to verify it (test / command / observable behavior) -->
-- [ ] AC1: <observable outcome> → verify: <test to write / command to run / behavior to observe>
-- [ ] AC2: ...
+<!-- each AC names the R# it covers, states what's true when done AND how to verify it (test / command / observable behavior); every R# appears in at least one AC -->
+- [ ] AC1 (covers R1): <observable outcome> → verify: <test to write / command to run / behavior to observe>
+- [ ] AC2 (covers R2): ...
 
 ## Out of Scope
 - <what we are explicitly not doing>
+
+## Assumptions
+<!-- choices made without an explicit answer in the ticket — visible so the user can veto them -->
+- <assumption + one-line rationale>
 
 ## Edge Cases
 - <tricky input/state to handle>
 
 ## Open Questions
-- [ ] Q1 (blocker): <ambiguity that blocks progress>
-- [ ] Q2: <nice-to-clarify>
+<!-- every Q carries a proposed default so the user can just confirm -->
+- [ ] Q1 (blocker): <ambiguity that blocks progress> — proposed: <best default + why>
+- [ ] Q2: <nice-to-clarify> — proposed: <best default + why>
 
 ## Change History
 - <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
-Keep entries concise and verifiable. State assumptions explicitly. Set `status: confirmed` only once open questions are resolved or acknowledged **and every `AC#` carries a concrete `verify:` check** — that `verify:` is the handoff payload `plan` turns into step checks and `review` ticks against, so an AC without one cannot be confirmed.
+Keep entries concise and verifiable. State assumptions in **Assumptions**, never silently. Set `status: confirmed` only once open questions are resolved or acknowledged, **every `AC#` carries a concrete `verify:` check, and every `R#` is covered by at least one `AC#`** — that `verify:` is the handoff payload `plan` turns into step checks and `review` ticks against, so an AC without one (or an R# no AC covers) cannot be confirmed.
 
 ### Updating an existing spec
 When the spec changes later, **edit `spec.md` in place** — don't start a new file. For every change:

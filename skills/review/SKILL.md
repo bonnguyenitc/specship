@@ -36,9 +36,10 @@ Split the review by what kind of signal each check needs. **You wrote (or drove)
 - Treat its output as input: fold every finding into your **Findings** below. For a genuine defect, hand it to `debug` (it gets a `BUG#` + regression test); don't just hand-wave it.
 
 **b. Keep the task-grounded checks here** (these need `spec.md`/`plan.md`/onboarding context that an independent pass doesn't have):
-- Read the full diff (`git diff`). Check every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative.
-- Cross-check the diff against each `spec.md` **edge case** — confirm it's actually handled, not just assumed.
-- Check the change followed the plan — note any deviation from `plan.md`.
+- **Coverage sweep — nothing missed, both ways.** Walk `spec.md` top-down: every `R#` and `AC#` maps to a ticked `S#` in `plan.md`, and the diff actually contains that step's change. Then the reverse: every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative. An `R#` no ticked step covers means the work isn't done, however green the gate is.
+- **Audit the test diff for weakened checks.** Look specifically at changes to tests and checks: loosened assertions, deleted or skipped cases (`.skip`, `xit`), blindly-updated snapshots, widened types. Each one is legitimate only if traced to a spec/plan change (Change History line) — untraced, it's a `blocker` finding, because it silently redefines "done".
+- Cross-check the diff against each `spec.md` **edge case** — confirm it's actually handled, not just assumed. Confirm the spec's **Assumptions** still hold in the implementation.
+- Check the change followed the plan — every deviation must already be traced in `plan.md` (inline note / Change History per the `coding` contract); flag any untraced drift.
 - **Check code style against `docs/onboarding/how-to-code.md`** — verify the documented rules: correct placement (right folder/file), naming, module size/responsibility, layer separation, error handling, logging, imports. Flag every deviation. If that file doesn't exist, fall back to matching neighbouring code.
 
 ### 2. Run the full gate
@@ -77,9 +78,10 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - [ ] AC2 — <why not met>
 
 ## Findings
-<!-- source: code-review (independent) | self (task-grounded) -->
-- [code-review] <correctness bug / missed edge case / simplification>, ref `path:line`
-- [self] <style deviation from how-to-code / plan or spec-trace deviation>, ref `path:line`
+<!-- source: code-review (independent) | self (task-grounded); severity: blocker (must fix before approve) | minor (may ship as follow-up) -->
+<!-- checkbox = addressed; tick it on re-review once the fix is verified -->
+- [ ] [code-review][blocker] <correctness bug / missed edge case>, ref `path:line`
+- [ ] [self][minor] <style deviation from how-to-code / simplification>, ref `path:line`
 
 ## Commit / PR Draft
 <commit message; PR title + body if relevant>
@@ -95,8 +97,9 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - Summarize what changed (files + behavior) and confirm all checks passed, stating results plainly (if a test fails or a step was skipped, say so).
 - Put the **drafted** commit message + PR title/body in `review.md` for the user.
 - **Do not run `git add` / `commit` / `push`** — the user runs these themselves. Hand them the drafted message to use.
-- Set `status: approved` only when all `AC#`/`S#` are ticked and the gate is green; otherwise `changes-requested` and list what's missing in Findings.
+- **Approval gate:** set `status: approved` only when all `AC#`/`S#` are ticked, the gate is green, and **no unaddressed `blocker` finding remains**. Open `minor` findings don't block approval — move them to **Follow-ups** explicitly (never drop them silently). Anything else is `changes-requested`, with what's missing listed in Findings.
 
 ## Next step
 - **`approved`** — the task is done: hand the user the drafted commit/PR message; they run git themselves.
 - **`changes-requested`** — ask the user whether to loop back: invoke the `coding` skill to address the Findings (or `debug` if a finding is a defect), then re-run this review. Keep the same `TASK-<ID>`; the Findings are the input for the fix. (Under `ship`, loop back automatically — its loop cap applies.)
+- **Re-review after a loop-back is targeted, not from scratch:** re-run the full gate (step 2 — always), then for each finding verify its fix and tick its checkbox in `review.md`, re-verify only the `AC#`s the fixes touch, and diff-review only the new changes. Don't re-litigate code that didn't change — but a fix that touches new files gets the full task-grounded checks on those files. Update `review.md` in place (bump `updated:`, Change History line), never fork a second review file.

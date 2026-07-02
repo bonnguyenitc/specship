@@ -28,6 +28,7 @@ Part of the task pipeline — see `../WORKFLOW.md` → "Task lifecycle". Unlike 
    - set `status: paused`; **leave `stage` and every `artifacts:` value untouched**.
    - bump `updated:`.
    - in the **Now** block, note it's paused and why (e.g. `- Blocked by: none (paused — waiting on design)`).
+   - **Snapshot the working tree:** check `git status` — if this task's work sits uncommitted, list the mid-flight files in the **Now** block (e.g. `- In flight: src/auth.ts, src/auth.test.ts (uncommitted)`), so resuming doesn't mistake them for another task's changes. Suggest the user stash or WIP-commit before switching tasks — don't run git yourself.
    - append a dated **Pipeline Log** line: `- <YYYY-MM-DD HH:MM +TZ> paused: <reason>`.
 5. **Confirm** to the user: which task, what stage it's frozen at, and that `/resume-task <ID>` brings it back exactly here.
 

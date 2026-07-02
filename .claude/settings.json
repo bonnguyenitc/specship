@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(node test/cli.test.js:*)",
+      "Bash(node bin/cli.js:*)",
+      "Bash(npm pack --dry-run:*)",
+      "Bash(./publish.sh --dry-run:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)"
+    ]
+  }
+}

@@ -31,6 +31,7 @@ Read manifests and docs first — they encode the intended setup.
 - Docs: `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `docs/`.
 - Ops: `Dockerfile`, `docker-compose.yml`, `Makefile`, `.env.example`, CI files (`.github/workflows/`).
 - Extract: language + version, framework, package manager, **the exact commands to install / run / test / lint**.
+- **Run the commands before documenting them.** The cheap ones (test, lint, type-check, build) get executed and their real outcome observed — these are the gate commands `coding` and `review` will inherit from your docs, so a wrong one poisons every later stage. Anything too heavy or environment-dependent to run now (deploy, infra) gets documented from source but marked `(unverified)`.
 
 ```bash
 ls -la
@@ -52,6 +53,7 @@ ls -la ; tree -L 2 2>/dev/null || find . -maxdepth 2 -type d -not -path "*/node_
 
 ### 4. Read the conventions
 - Lint/format config (`.eslintrc`, `ruff`, `.prettierrc`, `.editorconfig`).
+- **Read a few representative tests** — tests are the best behavior documentation a repo has: they show how the code is meant to be called, what the fixtures/helpers are, and the test structure `coding` must copy. Pick one unit and one integration/E2E test if both exist.
 - Naming, folder, and test patterns — copy them, don't invent new ones.
 - Git workflow: branch naming, commit/PR conventions if documented.
 
@@ -67,8 +69,11 @@ ls -la ; tree -L 2 2>/dev/null || find . -maxdepth 2 -type d -not -path "*/node_
 
 This skill produces **four Markdown files** in `docs/onboarding/`. Create the directory if missing, and overwrite existing files (they are regenerated docs). Use the **exact templates below** — fixed frontmatter and headings — so the docs stay consistent across regenerations and other skills (`spec`, `plan`, `coding`) can rely on their structure.
 
+**If the docs already exist, read them first** — regeneration is a refresh, not a blind rewrite. Verify each existing claim against the current code (cheap: the citations make every claim checkable), rewrite what drifted, and **carry over still-open Open Questions** instead of losing them.
+
 Rules for all four files:
 - Every claim must come from files you actually read — cite sources as `path/to/file.ext`, plus a named anchor (`function`/`class`/config key) when pointing inside a file. **Never cite line numbers** — they drift as soon as the code changes. Never invent paths.
+- **Mechanically verify every citation before writing** — each cited path must exist (`ls`) and each cited symbol must be greppable in that file. This is non-negotiable for claims that came from a subagent: an agent's confident wrong path becomes a "verified" doc the moment you write it down.
 - Set `updated:` in the frontmatter to the current date-time (`YYYY-MM-DD HH:MM +TZ`, from `date` — don't guess).
 - Keep every template heading, in order. If a section has nothing, write `_None found._` instead of deleting it.
 - Mark anything you couldn't confirm with `(unverified)` rather than guessing.

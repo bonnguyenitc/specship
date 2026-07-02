@@ -40,11 +40,16 @@ Leave `stage` and `artifacts:` untouched — restoring changes only status/locat
 ### 2. Reconstruct state
 Read the chosen task's `task.md` (frontmatter `stage` / `status` / `artifacts`, the **Now** block, and the **Pipeline Log**), then the artifacts that matter for the current stage (`spec.md`, `plan.md`, `review.md`, `debug.md`). Cross-check that the recorded `stage`/`artifacts` match what's actually on disk — if they disagree, that's a missing/stale trace: repair it per the contract before resuming, and record a lesson.
 
+**Verify the record against the code, not just against itself** — a checkbox is a claim, not proof, and the code may have moved since `updated:`:
+- **Spot-check recorded progress:** run the most recently ticked `S#`'s `verify:` (or the full gate if that's cheaper). Red means the trace lies — the code was reverted, rebased away, or never landed. Un-tick it, repair the trace, record a lesson, and resume from there.
+- **Check for drift:** if the codebase has changed since the task's `updated:` (`git log` since that date), confirm the plan's "Files to Touch" and cited symbols still exist before resuming `coding` — a plan written against code that has since moved needs a plan refresh first, not a blind resume.
+- **Check the working tree:** uncommitted changes may be this task's mid-flight work (the Now block may say so, per `pause-task`) — or another task's. Say which before resuming; don't silently build on top of foreign changes.
+
 ### 3. Report where it stands
 Give the user a tight status read before doing anything:
 - **Task**: id + title, current `stage` / `status`.
 - **Done**: ticked `S#` / `AC#`, confirmed/approved artifacts.
-- **Blocking**: `status: blocked`, any open blocker `Q#` in `spec.md`, open `BUG#` in `debug.md`, or `review: changes-requested` findings.
+- **Blocking**: `status: blocked`, any open blocker `Q#` in `spec.md`, open `BUG#` in `debug.md`, or `review: changes-requested` findings — for findings, report the unaddressed (unticked) `blocker` ones by name; `minor` ones just get a count.
 - **Next**: the one concrete action to move forward (the resume point from step 4).
 
 ### 4. Pick the resume point

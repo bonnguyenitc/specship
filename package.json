@@ -12,7 +12,7 @@
     "bin",
     "src",
     "skills",
-    ".claude",
+    ".claude/CLAUDE.md",
     ".codex",
     ".cursor",
     ".antigravity",

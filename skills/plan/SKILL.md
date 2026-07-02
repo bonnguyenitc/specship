@@ -22,9 +22,9 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 ## Method
 
 ### 1. Read the inputs
-- **Read `tasks/TASK-<ID>/spec.md`** (produced by `spec`) — every step must trace to a requirement or acceptance criterion in it. If it's missing, run `spec` first.
+- **Read `tasks/TASK-<ID>/spec.md`** (produced by `spec`) — every step must trace to a requirement or acceptance criterion in it, and its **Assumptions** can decide the design, so read them too. If it's missing, run `spec` first.
 - Know where the code will live and the patterns to follow: reuse `docs/onboarding/source-structure.md` and `how-to-code.md` if present, or run `explore-source` if the project is unfamiliar.
-- Identify the existing files, modules, and conventions the change touches.
+- **Open the actual files the plan will touch** — confirm the functions, signatures, and patterns the steps rely on really exist as you believe. A plan referencing imagined code doesn't fail now; it fails at `coding`, where it's more expensive.
 
 ### 2. Choose an approach
 - If multiple designs are viable, lay out the options with **tradeoffs** and pick one with a clear reason. Don't silently choose.
@@ -33,6 +33,8 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 
 ### 3. Break into steps
 - Order steps so each leaves the code in a working, testable state.
+- **Size each step like a commit:** one coherent change, independently verifiable. Too big: it mixes refactoring with behavior change, or its `verify:` can only pass once later steps land — split it (prep/refactor steps first, behavior steps after). Too small: it can't be verified on its own — merge it into the step that makes it observable.
+- **Turn unknowns into spike steps, not guesses.** If an approach hinges on something you can't know without trying (a library's behavior, a perf ceiling, an undocumented API), make the first step a time-boxed spike whose `verify:` is the question answered — and note that its outcome may revise the later steps.
 - For each step define: **what changes**, **which files** (`path`), and a **verify** check. The `verify:` must be **executable, not a description** — a concrete command or test the coding loop can run and read a pass/fail from (`<test-runner> path::case`, `tsc --noEmit`, `curl … | grep`, an assertion), not prose like "behavior works" or "looks correct". If a step's only honest check is a manual observation, name the **exact action and expected output** so it's still a binary check, not a vibe. A vague `verify:` hands the coding stage a strong loop pointed at a blurry target — it'll report "done" without proof.
 - **For a step that covers an `AC#`, its `verify:` should run (or extend) that AC's own `verify:` check from `spec.md`** — don't invent a parallel one. This is what carries the spec's acceptance check through to executable code and back up to `review`.
 - Call out data/schema migrations, API contract changes, and anything irreversible early.
@@ -41,7 +43,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 ## Output: write the plan to the task folder
 Write the plan to **`tasks/TASK-<ID>/plan.md`** (same `TASK-<ID>` as `spec.md`) using the **exact template below** — `coding` and `review` parse it. Then show the user a short summary.
 
-Rules for the IDs: steps are `S1, S2, …` and never renumbered (only appended). Each step's `covers:` field references the `R#`/`AC#` IDs from `spec.md` it satisfies — this is how every step traces to a requirement, and how `review` checks nothing was missed.
+Rules for the IDs: steps are `S1, S2, …` and never renumbered (only appended). Each step's `covers:` field references the `R#`/`AC#` IDs from `spec.md` it satisfies — this is how every step traces to a requirement, and how `review` checks nothing was missed. **Coverage runs both ways:** before approval, sweep `spec.md` and confirm every `R#` and `AC#` appears in at least one step's `covers:` — an uncovered ID means a missing step, or a scope question to raise with the user. Don't leave the gap for `review` to find.
 
 ```markdown
 ---
@@ -73,7 +75,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
-Keep it minimal and surgical: every step must list at least one `covers:` ID **and an executable `verify:`** — a step whose check can't be run is not ready to approve. For non-trivial plans, present it for approval before coding (use EnterPlanMode when appropriate). Set `status: approved` once the user approves. (Under `ship`, approval is delegated: set `status: approved` directly and log it.)
+Keep it minimal and surgical, and **right-size it**: a small task gets a small plan — two or three steps and `- none` in the empty sections, never steps invented to fill the template. Approval gate: every step lists at least one `covers:` ID **and an executable `verify:`**, and **every `R#`/`AC#` in `spec.md` is covered by at least one step** — a plan failing either check is not ready to approve. For non-trivial plans, present it for approval before coding (use EnterPlanMode when appropriate). Set `status: approved` once the user approves. (Under `ship`, approval is delegated: set `status: approved` directly and log it.)
 
 When the plan changes (including after a `spec.md` update), edit it in place: bump `updated:`, append a dated **Change History** line, keep `S#` IDs stable.
 
