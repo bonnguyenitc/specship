@@ -24,6 +24,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This s
 ### 1. Read the source completely
 - Read the full spec/ticket and any linked docs, designs, or related issues.
 - **Ground it in the actual code, not memory.** If the spec references code areas, open them: verify the named files/functions/flags exist, and record the **current behavior vs. desired behavior** delta — requirements stated against imagined code are the top source of misunderstood specs. Use the `explore-source` skill if the project is unfamiliar.
+- **Delegate heavy exploration to a subagent.** When grounding the spec means sweeping a large or unfamiliar codebase (broad "where is X handled?" questions, many candidate files), spawn the built-in **Explore** agent with a focused brief and ask for structured conclusions, not file dumps - it keeps this thread's context clean for the spec itself. Verify any path or symbol an agent reports before citing it in `spec.md`. For a small, known area, just read inline.
 
 ### 2. Extract the essentials
 - **Goal / why:** the problem being solved and the user value. One or two sentences.

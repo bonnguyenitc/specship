@@ -25,11 +25,13 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Read `tasks/TASK-<ID>/spec.md`** (produced by `spec`) — every step must trace to a requirement or acceptance criterion in it, and its **Assumptions** can decide the design, so read them too. If it's missing, run `spec` first.
 - Know where the code will live and the patterns to follow: reuse `docs/onboarding/source-structure.md` and `how-to-code.md` if present, or run `explore-source` if the project is unfamiliar.
 - **Open the actual files the plan will touch** — confirm the functions, signatures, and patterns the steps rely on really exist as you believe. A plan referencing imagined code doesn't fail now; it fails at `coding`, where it's more expensive.
+- **Delegate wide reads to a subagent.** If confirming the plan's assumptions requires broad exploration (an unfamiliar area, many candidate files), spawn the built-in **Explore** agent for the fan-out and keep only its conclusions in this thread - but still open the specific files the steps touch yourself, and verify any path or symbol an agent reports before the plan relies on it.
 
 ### 2. Choose an approach
 - If multiple designs are viable, lay out the options with **tradeoffs** and pick one with a clear reason. Don't silently choose.
 - Prefer the **simplest** design that satisfies the spec — no speculative abstractions or unrequested flexibility.
 - Reuse existing patterns/utilities instead of inventing new ones.
+- **Elegance checkpoint:** before locking the approach in, pause and ask "is there a simpler way to do this?" - a smaller diff, an existing utility, a design that removes a whole step. This is the cheapest moment to change course; at `coding` it costs a rewrite. Skip the ceremony for tiny fixes (a one- or two-step plan) - forcing it there invites over-engineering.
 
 ### 3. Break into steps
 - Order steps so each leaves the code in a working, testable state.
