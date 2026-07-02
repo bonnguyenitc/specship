@@ -1,6 +1,6 @@
 {
   "name": "specship",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Install a staged spec→plan→coding→review agent workflow (skills + per-agent config) into any project. Works with Claude Code, Codex, Cursor, and Antigravity.",
   "bin": {
     "specship": "bin/cli.js"
