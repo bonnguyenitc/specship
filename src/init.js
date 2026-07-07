@@ -99,10 +99,12 @@ function initTarget(name, projectDir, { force = false } = {}) {
   return lines;
 }
 
-// Agents already present in a project = those whose skills folder exists.
+// Agents already present in a project = those whose skills folder and config exist.
+// Some adapters share `.specship/skills`, so the config file disambiguates them.
 function detectInstalled(projectDir) {
   return Object.keys(TARGETS).filter((n) =>
-    fs.existsSync(path.join(projectDir, TARGETS[n].skillsDest))
+    fs.existsSync(path.join(projectDir, TARGETS[n].skillsDest)) &&
+    fs.existsSync(path.join(projectDir, TARGETS[n].doc.dest))
   );
 }
 

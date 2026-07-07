@@ -1,7 +1,7 @@
 {
   "name": "specship",
   "version": "0.1.16",
-  "description": "Install a staged spec→plan→coding→review agent workflow (skills + per-agent config) into any project. Works with Claude Code, Codex, Cursor, and Antigravity.",
+  "description": "Install a staged spec→plan→coding→review agent workflow (skills + per-agent config) into any project. Works with Claude Code, Codex, Gemini CLI, Cursor, Antigravity, Copilot, Windsurf, Cline, Roo Code, and AGENTS.md-compatible agents.",
   "bin": {
     "specship": "bin/cli.js"
   },
@@ -14,8 +14,14 @@
     "skills",
     ".claude/CLAUDE.md",
     ".codex",
+    ".agents",
+    ".gemini",
     ".cursor",
     ".antigravity",
+    ".github/copilot-instructions.md",
+    ".windsurf",
+    ".clinerules",
+    ".roo",
     "README.md"
   ],
   "author": "Thoai Nguyen",
@@ -33,7 +39,13 @@
     "skills",
     "claude",
     "codex",
+    "agents",
+    "gemini",
     "cursor",
+    "copilot",
+    "windsurf",
+    "cline",
+    "roo",
     "scaffold"
   ],
   "engines": {

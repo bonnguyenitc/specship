@@ -67,10 +67,18 @@ test('--all installs each agent at its native paths', () => {
   af(['init', '--all'], d);
   assert.ok(fs.existsSync(path.join(d, '.claude/skills/WORKFLOW.md')));
   assert.ok(fs.existsSync(path.join(d, '.codex/skills/WORKFLOW.md')));
+  assert.ok(fs.existsSync(path.join(d, '.agents/skills/WORKFLOW.md')), 'agents → .agents/skills');
+  assert.ok(fs.existsSync(path.join(d, '.gemini/skills/WORKFLOW.md')), 'gemini → .gemini/skills');
   assert.ok(fs.existsSync(path.join(d, '.cursor/skills/WORKFLOW.md')));
   assert.ok(fs.existsSync(path.join(d, '.agent/skills/WORKFLOW.md')), 'antigravity → .agent/skills');
+  assert.ok(fs.existsSync(path.join(d, '.specship/skills/WORKFLOW.md')), 'adapter agents → .specship/skills');
+  assert.match(read(path.join(d, 'GEMINI.md')), /specship:start/);
   assert.ok(fs.existsSync(path.join(d, '.cursor/rules/specship.mdc')));
   assert.ok(fs.existsSync(path.join(d, '.agent/rules/specship.md')));
+  assert.ok(fs.existsSync(path.join(d, '.github/copilot-instructions.md')));
+  assert.ok(fs.existsSync(path.join(d, '.windsurf/rules/specship.md')));
+  assert.ok(fs.existsSync(path.join(d, '.clinerules/specship.md')));
+  assert.ok(fs.existsSync(path.join(d, '.roo/rules/specship.md')));
 });
 
 test('openai.yaml manifest installs for codex only', () => {
@@ -78,8 +86,11 @@ test('openai.yaml manifest installs for codex only', () => {
   af(['init', '--all'], d);
   assert.ok(fs.existsSync(path.join(d, '.codex/skills/spec/agents/openai.yaml')), 'codex gets manifest');
   assert.ok(!fs.existsSync(path.join(d, '.claude/skills/spec/agents/openai.yaml')), 'claude skips it');
+  assert.ok(!fs.existsSync(path.join(d, '.agents/skills/spec/agents')), 'agents skips it');
+  assert.ok(!fs.existsSync(path.join(d, '.gemini/skills/spec/agents')), 'gemini skips it');
   assert.ok(!fs.existsSync(path.join(d, '.cursor/skills/spec/agents')), 'cursor skips it');
   assert.ok(!fs.existsSync(path.join(d, '.agent/skills/spec/agents')), 'antigravity skips it');
+  assert.ok(!fs.existsSync(path.join(d, '.specship/skills/spec/agents')), 'shared adapters skip it');
 });
 
 test('installed skills reference resolves (../WORKFLOW.md)', () => {
@@ -92,10 +103,20 @@ test('installed skills reference resolves (../WORKFLOW.md)', () => {
 
 test('list reports installed agents', () => {
   const d = tmp();
-  af(['init', '--cursor'], d);
+  af(['init', '--gemini'], d);
   const out = af(['list'], d);
-  assert.match(out, /✓ Cursor/);
+  assert.match(out, /✓ Gemini CLI/);
   assert.match(out, /· Claude Code/);
+});
+
+test('shared-skill adapters are detected by their own config', () => {
+  const d = tmp();
+  af(['init', '--windsurf'], d);
+  const out = af(['list'], d);
+  assert.match(out, /✓ Windsurf/);
+  assert.match(out, /· GitHub Copilot/);
+  assert.match(out, /· Cline/);
+  assert.match(out, /· Roo Code/);
 });
 
 test('update refreshes only installed agents', () => {

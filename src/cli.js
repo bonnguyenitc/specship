@@ -31,7 +31,7 @@ Options:
 
 Examples:
   npx specship init --claude
-  npx specship init --codex --cursor
+  npx specship init --codex --gemini --cursor
   npx specship init --all --dir ./my-app
   npx specship update          # refresh whatever is already installed
   npx specship list`);

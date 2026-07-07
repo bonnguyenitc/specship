@@ -19,6 +19,16 @@ module.exports = {
     // Per-skill vendor manifest copied from `skills/<skill>/agents/openai.yaml`.
     manifest: 'openai.yaml',
   },
+  agents: {
+    label: 'AGENTS.md-compatible agents',
+    skillsDest: '.agents/skills',
+    doc: { src: '.agents/AGENTS.md', dest: 'AGENTS.md', merge: true },
+  },
+  gemini: {
+    label: 'Gemini CLI',
+    skillsDest: '.gemini/skills',
+    doc: { src: '.gemini/GEMINI.md', dest: 'GEMINI.md', merge: true },
+  },
   cursor: {
     label: 'Cursor',
     skillsDest: '.cursor/skills',
@@ -28,5 +38,25 @@ module.exports = {
     label: 'Antigravity (Gemini)',
     skillsDest: '.agent/skills',
     doc: { src: '.antigravity/rules.md', dest: '.agent/rules/specship.md', merge: false },
+  },
+  copilot: {
+    label: 'GitHub Copilot',
+    skillsDest: '.specship/skills',
+    doc: { src: '.github/copilot-instructions.md', dest: '.github/copilot-instructions.md', merge: true },
+  },
+  windsurf: {
+    label: 'Windsurf',
+    skillsDest: '.specship/skills',
+    doc: { src: '.windsurf/rules/specship.md', dest: '.windsurf/rules/specship.md', merge: false },
+  },
+  cline: {
+    label: 'Cline',
+    skillsDest: '.specship/skills',
+    doc: { src: '.clinerules/specship.md', dest: '.clinerules/specship.md', merge: false },
+  },
+  roo: {
+    label: 'Roo Code',
+    skillsDest: '.specship/skills',
+    doc: { src: '.roo/rules/specship.md', dest: '.roo/rules/specship.md', merge: false },
   },
 };

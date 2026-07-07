@@ -37,7 +37,7 @@ agent's native location.
 | --- | --- |
 | **Staged work** | Requirements, plans, code, and review each get their own explicit checkpoint. |
 | **Disk-backed state** | Any agent or human can resume from `tasks/TASK-<ID>/` without relying on chat history. |
-| **Native agent setup** | Claude Code, Codex, Cursor, and Antigravity receive their files in the paths they already expect. |
+| **Native agent setup** | Claude Code, Codex, Gemini CLI, Cursor, Antigravity, Copilot, Windsurf, Cline, Roo Code, and AGENTS.md-compatible agents receive files in the paths they already expect. |
 | **Reviewable artifacts** | Specs, plans, bug logs, and review notes stay in the repo as durable project context. |
 
 ## Quick Start
@@ -47,8 +47,10 @@ Requires [Node.js](https://nodejs.org) >= 16.
 ```bash
 npx specship init --claude        # Claude Code
 npx specship init --codex         # Codex
+npx specship init --agents        # AGENTS.md-compatible agents
+npx specship init --gemini        # Gemini CLI
 npx specship init --cursor        # Cursor
-npx specship init --all           # all of the above (+ Antigravity)
+npx specship init --all           # every supported agent adapter
 ```
 
 After installing:
@@ -192,7 +194,7 @@ stops only on blocker questions, destructive actions, or review failures.
 
 | Command | What it does |
 | --- | --- |
-| `init <agents>` | Install the workflow for `--claude`, `--codex`, `--cursor`, `--antigravity`, or `--all`. |
+| `init <agents>` | Install the workflow for any supported agent flag, or every adapter with `--all`. |
 | `update` | Refresh skills and config for whatever agents are already installed in the project. |
 | `list` | Show which agents are installed here. |
 
@@ -219,8 +221,19 @@ writes or merges its config pointer at the correct native path.
 | --- | --- | --- | --- |
 | `--claude` | `.claude/skills/` | `CLAUDE.md` | merge |
 | `--codex` | `.codex/skills/` | `AGENTS.md` | merge |
+| `--agents` | `.agents/skills/` | `AGENTS.md` | merge |
+| `--gemini` | `.gemini/skills/` | `GEMINI.md` | merge |
 | `--cursor` | `.cursor/skills/` | `.cursor/rules/specship.mdc` | write |
 | `--antigravity` | `.agent/skills/` | `.agent/rules/specship.md` | write |
+| `--copilot` | `.specship/skills/` | `.github/copilot-instructions.md` | merge |
+| `--windsurf` | `.specship/skills/` | `.windsurf/rules/specship.md` | write |
+| `--cline` | `.specship/skills/` | `.clinerules/specship.md` | write |
+| `--roo` | `.specship/skills/` | `.roo/rules/specship.md` | write |
+
+`--agents` is the broad compatibility adapter for tools that read `AGENTS.md`,
+including Aider, Devin, Jules, Amp, Zed, Junie, Factory, goose, Augment Code,
+and similar agents. Tool-specific adapters are still provided where the tool has
+a stronger native rule location.
 
 `merge` inserts an idempotent `<!-- specship:start -->…<!-- specship:end -->`
 block into your existing file. Re-running `init` updates that block without
@@ -273,8 +286,14 @@ recorded against the contract.
 skills/                 # canonical skill playbooks shipped to each agent
 .claude/CLAUDE.md       # pointer template → installed as CLAUDE.md
 .codex/AGENTS.md        # pointer template → installed as AGENTS.md
+.agents/AGENTS.md       # universal AGENTS.md-compatible pointer template
+.gemini/GEMINI.md       # pointer template → installed as GEMINI.md
 .cursor/WORKFLOW.mdc    # pointer template → installed as .cursor/rules/specship.mdc
 .antigravity/rules.md   # pointer template → installed as .agent/rules/specship.md
+.github/                # GitHub Copilot instruction template
+.windsurf/              # Windsurf rule template
+.clinerules/            # Cline rule template
+.roo/                   # Roo Code rule template
 bin/cli.js              # CLI entry
 src/                    # CLI logic; targets.js holds source→dest mappings
 examples/slugify-demo/  # complete worked task, not installed
