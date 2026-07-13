@@ -1,5 +1,6 @@
 ---
 name: coding
+model: sonnet
 description: Implement an approved plan step by step, following the project's conventions, and verify each step. Use after a plan exists, when asked to "implement this", "code it up", or "build the feature". Writes minimal, surgical code matching existing style and runs the success checks. Final stage of the spec → plan → coding workflow.
 ---
 
@@ -15,7 +16,7 @@ Goal: execute the approved plan into working, clean code — one verifiable step
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md`, `plan.md`, `spec.md`, and `docs/onboarding/how-to-code.md`. If `plan.md` is missing, run `plan` first.
-- **Checkpoint:** as steps pass, tick `S#` in `plan.md`; update `task.md` — set `stage: coding`, `coding` artifact `in-progress`→`done`, bump `updated:`, append a Pipeline Log line.
+- **Checkpoint:** as steps pass, tick `S#` in `plan.md`; update `task.md` — set `stage: coding`, `coding` artifact `in-progress`→`done`, bump `updated:`, append a Pipeline Log line carrying your agent label (format: `../WORKFLOW.md` → Agent handoff).
 - **Blocked?** If a step can't proceed because of an external dependency (an unmerged API, missing data/access, another team), set `status: blocked`, note it in `Blocked by:`, and log it; flip back to `active` when it clears. A *blocker bug* instead goes through `debug` (which sets `blocked` itself). `blocked` is involuntary — to set the task aside by choice, use `pause-task`. See `../WORKFLOW.md` → Status values.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
@@ -52,7 +53,7 @@ For each step in the plan, follow the chosen approach:
 ## Parallelizing independent steps
 Default to coding **sequentially in this thread** — for dependent steps, TDD, or anything needing tight verification, that's faster and safer than a subagent (which pays a cold-start cost and breaks the per-step loop).
 
-Only fan out to parallel subagents when the speed-up is real:
+Fanning out is an application of the **in-stage subagents** doctrine (`../WORKFLOW.md` → In-stage subagents): the main thread owns the state and the gate, agents only produce code, and if the platform can't spawn subagents you do the steps inline instead. Only fan out to parallel subagents when the speed-up is real:
 - **Eligible when** the `S#` steps are genuinely independent — no shared state, and **non-overlapping files** (judge this from the plan's `covers:` IDs and "Files to Touch"). Good fits: separate modules/endpoints, or mechanical bulk work (scaffolding, repetitive edits across many files).
 - **How:** give each subagent a tight brief — its `S#` step(s), the exact files it owns, and the `docs/onboarding/how-to-code.md` rules. Run independent agents in parallel; if files might still collide, give each its own **git worktree**.
 - **Main thread stays the owner:** integrate the agents' output, run the **full gate** (lint + type-check + entire test suite), tick the `S#` in `plan.md`, and update `task.md`. Agents implement; you verify and own the state — same pattern as `explore-source`/`debug`.

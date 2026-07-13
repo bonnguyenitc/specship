@@ -14,6 +14,7 @@ For any non-trivial change, follow the staged workflow defined in
    - `ship` → autopilot: given a feature request, run spec → plan → coding → review end-to-end
    - `resume-task` → re-entry: locate an in-progress (or paused) task, report where it stands, resume the right stage
    - `pause-task` / `archive-task` → lifecycle: shelve a task as `paused`, or move it into `tasks/archive/`; both keep pipeline state intact
+   - `research` → answer an external-fact question (libraries, APIs, "latest X") with the strongest search tool available (specialized MCP search first) → complete cited report in `docs/research/`
 3. Maintain the shared state in `tasks/TASK-<ID>/`: read `task.md` on start, update
    it on finish; keep IDs (`R#`/`AC#`/`S#`/`BUG#`) stable; timestamp every log entry
    as `YYYY-MM-DD HH:MM +TZ` (get it from `date`, don't guess).

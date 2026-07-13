@@ -1,5 +1,6 @@
 ---
 name: review
+model: opus
 description: Wrap up a finished change — self-review the diff, run the full test/lint gate, verify against acceptance criteria, update docs, then prepare commit/PR. Use after coding is done, when asked to "review my changes", "wrap up", "finalize", or "is this ready to merge". Final stage of the spec → plan → coding → review workflow.
 ---
 
@@ -15,7 +16,7 @@ Goal: take a change from "code written" to "ready to ship" — verified correct,
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md`, `spec.md`, `plan.md`, `docs/onboarding/how-to-code.md`, and the diff.
-- **Checkpoint:** write `review.md` and tick verified `AC#` in `spec.md`; update `task.md` — set `review` artifact `changes-requested`/`approved`, set `stage: done` + `status: done` only when approved, bump `updated:`, append a Pipeline Log line.
+- **Checkpoint:** write `review.md` and tick verified `AC#` in `spec.md`; update `task.md` — set `review` artifact `changes-requested`/`approved`, set `stage: done` + `status: done` only when approved, bump `updated:`, append a Pipeline Log line carrying your agent label (format: `../WORKFLOW.md` → Agent handoff).
 - **Blocked?** If the review can't complete because of an external dependency (a staging env, access, or sign-off it's waiting on), set `status: blocked`, note it in `Blocked by:`, and log it; flip back to `active` when it clears. A *blocker defect* found in review goes through `debug` (which sets `blocked` itself). `blocked` is involuntary — to set the task aside by choice, use `pause-task`. See `../WORKFLOW.md` → Status values.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake (in this stage or an earlier one), fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
@@ -34,6 +35,7 @@ Split the review by what kind of signal each check needs. **You wrote (or drove)
 **a. Delegate correctness bug-hunting to `/code-review`** (an independent reviewer with fresh context):
 - Invoke the `code-review` skill (via the Skill tool) at an appropriate effort — it reads the working diff and reports correctness bugs, missed edge cases, and reuse/simplification/efficiency findings without the bias of having just written the code.
 - Treat its output as input: fold every finding into your **Findings** below. For a genuine defect, hand it to `debug` (it gets a `BUG#` + regression test); don't just hand-wave it.
+- **Review panel (in-stage subagents).** The **default is one** independent pass — the single `/code-review` above. A **panel of >1** independent reviewers is **opt-in**: run it when the user asks, or when a high-risk or large diff warrants more eyes (your judgement — there is no fixed size threshold). Panel members are **blind to each other** (each a fresh, context-free pass, optionally with different lenses — correctness, security, performance); the **main thread dedups and merges** their findings into **Findings** and **owns the final verdict**. If your platform can't spawn subagents, do the default correctness pass and any additional pass(es) **inline** yourself — never drop the coverage. See `../WORKFLOW.md` → In-stage subagents for the invariants.
 
 **b. Keep the task-grounded checks here** (these need `spec.md`/`plan.md`/onboarding context that an independent pass doesn't have):
 - **Coverage sweep — nothing missed, both ways.** Walk `spec.md` top-down: every `R#` and `AC#` maps to a ticked `S#` in `plan.md`, and the diff actually contains that step's change. Then the reverse: every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative. An `R#` no ticked step covers means the work isn't done, however green the gate is.

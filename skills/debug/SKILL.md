@@ -1,5 +1,6 @@
 ---
 name: debug
+model: opus
 description: Diagnose and fix a bug methodically, and track the investigation in the owning task. Use when something is broken, a test fails, behavior is wrong, or asked to "debug X", "fix this bug", "why is this failing". Reproduces, finds root cause, fixes minimally, verifies, and records it in tasks/TASK-<ID>/debug.md. Attaches to the spec → plan → coding → review workflow whenever a defect appears.
 ---
 
@@ -15,7 +16,7 @@ Goal: find the **root cause** of a defect and fix it with the smallest correct c
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug` attaches to a task rather than being a fixed pipeline stage.
 - **Hydrate:** resolve the owning `TASK-<ID>` (see "Attach the bug to a task" below), read its `task.md`, and `spec.md`/`plan.md` as needed. If no task owns it, create a new one.
-- **Checkpoint:** append the `BUG#` entry to `debug.md`; update `task.md` — set `debug` artifact `open-bugs`/`clear`, set `status: blocked` while a blocker bug is open (note it in `Blocked by:`), bump `updated:`, append a Pipeline Log line. Clear back to `active` when fixed and return to the stage you came from. (`blocked` is involuntary; see `../WORKFLOW.md` → Status values.)
+- **Checkpoint:** append the `BUG#` entry to `debug.md`; update `task.md` — set `debug` artifact `open-bugs`/`clear`, set `status: blocked` while a blocker bug is open (note it in `Blocked by:`), bump `updated:`, append a Pipeline Log line carrying your agent label (format: `../WORKFLOW.md` → Agent handoff). Clear back to `active` when fixed and return to the stage you came from. (`blocked` is involuntary; see `../WORKFLOW.md` → Status values.)
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if the bug's root cause was a process mistake (e.g. a skipped verify, a stale plan), fix the process trace too and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
 ## Attach the bug to a task
@@ -27,7 +28,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug
 Work from evidence, one hypothesis at a time. Don't guess-and-change.
 
 1. **Reproduce — no fix before a repro.** Get a reliable, minimal reproduction and **watch it fail for the expected reason** before touching any code; a fix you can't demonstrate failing is a guess. If you can't reproduce it, *that* is the investigation — add logging, tighten the conditions, gather evidence — don't "fix" what you can't observe. Capture the exact error/stack, inputs, and environment, and **write the failing test** that triggers the bug — it becomes the regression test. When `coding` hands off after its 3-attempt rule, start from its failing `verify:` command as the repro and **read what was already tried** — those disproven attempts are evidence, not a path to retread.
-2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `grep`/`rg` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **Explore** / `general-purpose` agent and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread.
+2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `grep`/`rg` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **Explore** / `general-purpose` agent and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread. If your platform can't spawn subagents, do the same investigation **inline** in the main thread (`../WORKFLOW.md` → In-stage subagents — delegation is an optimization, never a precondition).
 3. **Hypothesize — one at a time, revert what fails.** State the suspected root cause explicitly before changing anything, and confirm it with evidence (a log, a value, a failing assertion), don't assume. If the evidence disproves it, **revert that attempt's changes before testing the next hypothesis** — stacked speculative edits pollute the diff and can mask the symptom without fixing the cause. Record each ruled-out hypothesis (and what disproved it) in the `BUG#` entry so the investigation survives interruption and nobody retreads it.
 4. **Fix** — apply the **minimum** change that addresses the root cause. Stay surgical; don't refactor unrelated code or fix symptoms downstream.
 5. **Verify** — the failing test now passes, the full suite stays green, and the original reproduction is gone.

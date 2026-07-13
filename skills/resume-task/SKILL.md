@@ -20,7 +20,7 @@ Task state lives on disk (`tasks/TASK-<ID>/`), not in the chat session — that'
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `resume-task` reads the shared state and delegates; the stage skill it invokes does the writing.
 - **Hydrate:** read `tasks/LESSONS.md` if present (apply its rules) and the target task's `task.md` + its artifacts (below).
-- **Checkpoint:** `resume-task` writes to `task.md` only to (a) **un-shelve** a task it's resuming (flip `paused`→`active`, or move a folder back out of `archive/` — see step 1) or (b) **repair a missing trace** while reconstructing state (see `../WORKFLOW.md` → Flow integrity). Both bump `updated:` and add a dated Pipeline Log line; it never touches `stage`/`artifacts:`. All pipeline checkpointing is the resumed stage skill's job.
+- **Checkpoint:** `resume-task` writes to `task.md` only to (a) **un-shelve** a task it's resuming (flip `paused`→`active`, or move a folder back out of `archive/` — see step 1) or (b) **repair a missing trace** while reconstructing state (see `../WORKFLOW.md` → Flow integrity). Both bump `updated:` and add a dated Pipeline Log line carrying your agent label (format: `../WORKFLOW.md` → Agent handoff); it never touches `stage`/`artifacts:`. All pipeline checkpointing is the resumed stage skill's job.
 
 ## Method
 

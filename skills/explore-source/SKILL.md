@@ -19,7 +19,7 @@ For anything beyond a tiny repo, **don't read the whole codebase in the main thr
 - **How:** run the steps below as a brief for the agent. Give it a focused goal and ask for a **structured result**, not file dumps — e.g. "List every top-level dir with its role and the key entry file (path + entry symbol)" or "Find where auth is enforced; return the call chain."
 - **Parallelize** independent sweeps (structure, entry points, conventions) as separate agent runs when it speeds things up.
 - **Then** synthesize the agents' findings into the onboarding docs yourself. You own the writing and the verification — spot-check anything an agent claims before citing it.
-- For a small repo, just do it inline; spawning an agent isn't worth the cold-start cost.
+- For a small repo, just do it inline; spawning an agent isn't worth the cold-start cost. Likewise if your platform can't spawn subagents at all: do the full exploration inline in the main thread (`../WORKFLOW.md` → In-stage subagents — delegation is an optimization, never a precondition).
 
 ## Method
 

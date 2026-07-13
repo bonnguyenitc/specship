@@ -1,5 +1,6 @@
 ---
 name: spec
+model: opus
 description: Read and fully understand a spec, ticket, PRD, or feature request before any planning or coding. Use when given requirements to implement, when asked to "understand this spec", "what does this ticket mean", or as the first step of a feature. Extracts goals, requirements, acceptance criteria, edge cases, and open questions. First stage of the spec → plan → coding workflow.
 ---
 
@@ -15,7 +16,7 @@ Goal: turn a spec into a precise, shared understanding **before** designing or c
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This skill **opens the task**.
 - **Hydrate:** if continuing an existing task, read `tasks/TASK-<ID>/task.md` + `spec.md`; otherwise pick a new `TASK-<ID>` and create the folder. Read `docs/onboarding/*` if present; if those docs are missing and the codebase is unfamiliar, offer to run `explore-source` first — its output is the convention reference for every later stage.
-- **Checkpoint:** create/update `task.md` (the shared state file) alongside `spec.md` — set `stage: spec`, `spec` artifact status `draft`→`confirmed`, bump `updated:`, append a Pipeline Log line.
+- **Checkpoint:** create/update `task.md` (the shared state file) alongside `spec.md` — set `stage: spec`, `spec` artifact status `draft`→`confirmed`, bump `updated:`, append a Pipeline Log line carrying your agent label (format: `../WORKFLOW.md` → Agent handoff).
 - **Blocked?** If the spec can't be confirmed because a **blocker `Q#`** is waiting on the user or an external answer, set `status: blocked`, note it in the **Now** block's `Blocked by:` line, and log it; flip back to `active` once it's answered. `blocked` is involuntary — to set the task aside by choice, use `pause-task`. See `../WORKFLOW.md` → Status values.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
@@ -24,7 +25,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This s
 ### 1. Read the source completely
 - Read the full spec/ticket and any linked docs, designs, or related issues.
 - **Ground it in the actual code, not memory.** If the spec references code areas, open them: verify the named files/functions/flags exist, and record the **current behavior vs. desired behavior** delta — requirements stated against imagined code are the top source of misunderstood specs. Use the `explore-source` skill if the project is unfamiliar.
-- **Delegate heavy exploration to a subagent.** When grounding the spec means sweeping a large or unfamiliar codebase (broad "where is X handled?" questions, many candidate files), spawn the built-in **Explore** agent with a focused brief and ask for structured conclusions, not file dumps - it keeps this thread's context clean for the spec itself. Verify any path or symbol an agent reports before citing it in `spec.md`. For a small, known area, just read inline.
+- **Delegate heavy exploration to a subagent.** When grounding the spec means sweeping a large or unfamiliar codebase (broad "where is X handled?" questions, many candidate files), spawn the built-in **Explore** agent with a focused brief and ask for structured conclusions, not file dumps - it keeps this thread's context clean for the spec itself. Verify any path or symbol an agent reports before citing it in `spec.md`. For a small, known area, just read inline — and if your platform can't spawn subagents at all, do the exploration inline too (`../WORKFLOW.md` → In-stage subagents: delegation is an optimization, never a precondition).
 
 ### 2. Extract the essentials
 - **Goal / why:** the problem being solved and the user value. One or two sentences.
@@ -37,6 +38,14 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. This s
 
 ### 3. Find the gaps
 Actively hunt for ambiguity. For anything underspecified, **don't assume silently** — list it as an open question, and **give every `Q#` a proposed answer** (your best default + one line of why) so the user can confirm with a yes instead of designing the answer themselves. When you must ask, **batch all blocker `Q#`s into one message** — don't drip questions across turns. A resolved question whose answer you chose yourself becomes an entry in **Assumptions**, not silence.
+
+**Sweep the classic blind spots** — axes tickets routinely leave unstated. For each one that applies, the spec must answer it, or it becomes a `Q#` or an Assumption; skip the ones that clearly don't apply (this is a hunting list, not sections to fill):
+- **Permissions:** who is allowed to do this, and what do other roles/users see?
+- **Failure behavior:** invalid input, partial failure, timeouts — what does the user see, and what state is left behind?
+- **Existing data:** does anything already stored need migrating, and must old records keep working (backward compat)?
+- **Concurrency & retries:** duplicate submits, two writers, idempotency of the operation.
+- **Limits & i18n:** size/rate caps, long strings, non-ASCII input, timezones.
+- **Operability:** how failures surface (logs/metrics), and whether the change can roll out and back safely.
 
 ### 4. Right-size it
 Scale the spec to the task. A small, well-understood change gets a small spec — a couple of `R#`/`AC#` and empty sections marked `- none` — not padded prose. Never invent requirements, edge cases, or questions to fill the template; an inflated spec buries the real signal and costs every later stage.
@@ -93,7 +102,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - <YYYY-MM-DD HH:MM +TZ>: Created.
 ```
 
-Keep entries concise and verifiable. State assumptions in **Assumptions**, never silently. Set `status: confirmed` only once open questions are resolved or acknowledged, **every `AC#` carries a concrete `verify:` check, and every `R#` is covered by at least one `AC#`** — that `verify:` is the handoff payload `plan` turns into step checks and `review` ticks against, so an AC without one (or an R# no AC covers) cannot be confirmed.
+Keep entries concise and verifiable. State assumptions in **Assumptions**, never silently. Set `status: confirmed` only once open questions are resolved or acknowledged, **every `AC#` carries a concrete `verify:` check, and every `R#` is covered by at least one `AC#`** — that `verify:` is the handoff payload `plan` turns into step checks and `review` ticks against, so an AC without one (or an R# no AC covers) cannot be confirmed. "Resolved or acknowledged" is not symmetric: a **blocker `Q#` must be ticked** with its answer folded into `R#`/`AC#`/Assumptions before confirming, while a non-blocker may stay open if acknowledged — `specship check` fails a confirmed spec that still has an unticked blocker.
 
 ### Updating an existing spec
 When the spec changes later, **edit `spec.md` in place** — don't start a new file. For every change:

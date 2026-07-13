@@ -26,7 +26,7 @@ Part of the task pipeline — see `../WORKFLOW.md` → "Task lifecycle". This sk
 2. **Confirm intent — this moves a folder.** State which task and its current `stage`/`status`, then:
    - If `status: done` → proceed (still confirm once). **But first check the draft shipped:** if `review.md` holds a commit/PR draft, look for a matching commit (`git log`) — if none exists, the work may be finished but unshipped; surface the draft to the user before archiving so it doesn't get buried in `archive/`.
    - If **not** done (active / blocked / paused — unfinished work) → **ask the user to confirm** archiving unfinished work, and capture a reason (e.g. "superseded by TASK-012"). Never archive live work silently.
-3. **Log before moving** — get the real time (`date "+%Y-%m-%d %H:%M %Z"`), then in `tasks/TASK-<ID>/task.md`: bump `updated:` and append a dated **Pipeline Log** line `- <YYYY-MM-DD HH:MM +TZ> archived: <reason>`. **Leave `stage` and `artifacts:` untouched.**
+3. **Log before moving** — get the real time (`date "+%Y-%m-%d %H:%M %Z"`), then in `tasks/TASK-<ID>/task.md`: bump `updated:` and append a dated **Pipeline Log** line `- <YYYY-MM-DD HH:MM +TZ> archived: <reason>` — carrying your agent label (format: `../WORKFLOW.md` → Agent handoff). **Leave `stage` and `artifacts:` untouched.**
 4. **Move the folder** to `tasks/archive/TASK-<ID>/` (create `tasks/archive/` if missing). Move the whole folder intact — every artifact comes along. Don't `git rm`/`git mv` or commit unless the user asks.
 5. **Confirm** to the user: the task is archived at `tasks/archive/TASK-<ID>/`, and `/resume-task <ID>` restores it if needed.
 

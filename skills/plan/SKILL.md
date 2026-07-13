@@ -1,5 +1,6 @@
 ---
 name: plan
+model: opus
 description: Design an implementation plan from an understood spec before writing code. Use after the spec is understood, when asked to "plan this feature", "how should we implement X", or "break this down into steps". Produces an ordered, verifiable step-by-step plan with files to touch, approach, tradeoffs, and per-step success checks. Second stage of the spec → plan → coding workflow.
 ---
 
@@ -15,7 +16,7 @@ Goal: turn an understood spec into a concrete, ordered implementation plan — s
 ## Shared task state
 Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Hydrate:** resolve the active `TASK-<ID>`, read `tasks/TASK-<ID>/task.md` + `spec.md`, plus `docs/onboarding/{source-structure,how-to-code}.md` if present. If `spec.md` is missing or `status: draft` with open blockers, run `spec` first.
-- **Checkpoint:** write `plan.md`, then update `task.md` — set `stage: plan`, `plan` artifact `draft`→`approved`, bump `updated:`, append a Pipeline Log line.
+- **Checkpoint:** write `plan.md`, then update `task.md` — set `stage: plan`, `plan` artifact `draft`→`approved`, bump `updated:`, append a Pipeline Log line carrying your agent label (format: `../WORKFLOW.md` → Agent handoff).
 - **Blocked?** If planning can't be finalized because of an unresolved **blocker `Q#`** or an external dependency (an API/data/decision the plan hinges on), set `status: blocked`, note it in `Blocked by:`, and log it; flip back to `active` when it clears. `blocked` is involuntary — to set the task aside by choice, use `pause-task`. See `../WORKFLOW.md` → Status values.
 - **Lessons:** read `tasks/LESSONS.md` at hydrate and apply its rules; if you detect a process mistake, fix it and append an `L#` entry there (see `../WORKFLOW.md` → Lessons).
 
@@ -25,7 +26,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract.
 - **Read `tasks/TASK-<ID>/spec.md`** (produced by `spec`) — every step must trace to a requirement or acceptance criterion in it, and its **Assumptions** can decide the design, so read them too. If it's missing, run `spec` first.
 - Know where the code will live and the patterns to follow: reuse `docs/onboarding/source-structure.md` and `how-to-code.md` if present, or run `explore-source` if the project is unfamiliar.
 - **Open the actual files the plan will touch** — confirm the functions, signatures, and patterns the steps rely on really exist as you believe. A plan referencing imagined code doesn't fail now; it fails at `coding`, where it's more expensive.
-- **Delegate wide reads to a subagent.** If confirming the plan's assumptions requires broad exploration (an unfamiliar area, many candidate files), spawn the built-in **Explore** agent for the fan-out and keep only its conclusions in this thread - but still open the specific files the steps touch yourself, and verify any path or symbol an agent reports before the plan relies on it.
+- **Delegate wide reads to a subagent.** If confirming the plan's assumptions requires broad exploration (an unfamiliar area, many candidate files), spawn the built-in **Explore** agent for the fan-out and keep only its conclusions in this thread - but still open the specific files the steps touch yourself, and verify any path or symbol an agent reports before the plan relies on it. If your platform can't spawn subagents, do the exploration **inline** in this thread instead (`../WORKFLOW.md` → In-stage subagents: delegation is an optimization, never a precondition).
 
 ### 2. Choose an approach
 - If multiple designs are viable, lay out the options with **tradeoffs** and pick one with a clear reason. Don't silently choose.

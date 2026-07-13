@@ -15,7 +15,10 @@ module.exports = {
   codex: {
     label: 'Codex',
     skillsDest: '.codex/skills',
-    doc: { src: '.codex/AGENTS.md', dest: 'AGENTS.md', merge: true },
+    // Shares the AGENTS.md template with `agents`: both merge the same block
+    // (fallback path order inside covers either install), so merge order
+    // between the two targets can't change the outcome.
+    doc: { src: '.agents/AGENTS.md', dest: 'AGENTS.md', merge: true },
     // Per-skill vendor manifest copied from `skills/<skill>/agents/openai.yaml`.
     manifest: 'openai.yaml',
   },

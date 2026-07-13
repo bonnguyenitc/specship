@@ -1,6 +1,6 @@
 # Task Workflow — Shared State Contract
 
-All task skills (`spec`, `plan`, `coding`, `review`, `debug`) cooperate on one task by reading and writing **shared artifacts** in a single folder. This file is the canonical contract every skill follows so handoffs are seamless. `explore-source` is separate — it produces project-wide docs in `docs/onboarding/` that the task skills consume as the convention reference.
+All task skills (`spec`, `plan`, `coding`, `review`, `debug`) cooperate on one task by reading and writing **shared artifacts** in a single folder. This file is the canonical contract every skill follows so handoffs are seamless. `explore-source` is separate — it produces project-wide docs in `docs/onboarding/` that the task skills consume as the convention reference. `research` is likewise standalone — it answers external-fact questions with the strongest search tool available and finishes with a complete cited report in `docs/research/`; it never writes to `tasks/` (a stage that requested it records what it needs in its own artifact).
 
 ## Pipeline
 
@@ -74,11 +74,13 @@ artifacts:           # value = that artifact's current status (filenames are fix
 - Blocked by: <none | what>
 
 ## Pipeline Log
-- <YYYY-MM-DD HH:MM +TZ> spec: confirmed
-- <YYYY-MM-DD HH:MM +TZ> plan: approved
+- <YYYY-MM-DD HH:MM +TZ> spec (claude-code): confirmed
+- <YYYY-MM-DD HH:MM +TZ> plan (codex): approved
 - <YYYY-MM-DD HH:MM +TZ> coding: 3/5 steps done
-- <YYYY-MM-DD HH:MM +TZ> debug: BUG1 fixed
+- <YYYY-MM-DD HH:MM +TZ> debug (claude-code): BUG1 fixed
 ```
+
+Pipeline Log line format: `- <ts> <stage> (<agent>): <event>` — the `(<agent>)` label names the acting agent and is **optional**; unlabeled lines stay valid (see "Agent handoff").
 
 ## Task lifecycle (around the pipeline)
 
@@ -130,6 +132,22 @@ Rules:
 | `coding`| `task.md`, `plan.md`, `spec.md`, `docs/onboarding/{how-to-code,source-structure}` | code, ticks `S#` in `plan.md`           | stage=coding, coding=in-progress→done    |
 | `review`| `task.md`, `spec.md`, `plan.md`, `docs/onboarding/{how-to-code,source-structure}`, diff | `review.md`, ticks `AC#`                | stage=review→done, review=…, status=done |
 | `debug` | `task.md`, `spec.md`/`plan.md` as needed, the failing repro           | `debug.md`, regression test             | debug=open-bugs→clear, status=blocked?   |
+
+## Agent handoff — a task can switch platforms mid-pipeline
+
+The `tasks/` contract is agent-agnostic: a task may move between agent platforms (Claude Code, Codex, Cursor, Antigravity, …) at **any checkpoint**, and the receiving agent needs nothing beyond the task folder.
+
+- **Hydrate is the handoff.** The receiving agent runs the normal hydrate step — read `task.md`, then the upstream artifacts it depends on. That is the *only* payload: **no conversation context may be assumed** to carry across a handoff. Anything the next stage needs must already live in the artifacts (that's what the checkpoint rules guarantee).
+- **Label your Pipeline Log lines with the acting agent.** Each line may name who ran it: `- <ts> <stage> (<agent>): <event>`. The `<agent>` label is **self-reported free text** (`claude-code`, `codex`, `cursor`, …) — no registry, no validation. If your platform has no distinctive name, **omit the label** rather than invent noise; unlabeled lines stay valid. The format is additive, so tasks written before this convention never need rewriting.
+- **Mid-stage handoff resumes from the artifacts' own progress markers.** Coding half-done → the next agent resumes from the ticked `S#`s in `plan.md`; a spec with open blocker `Q#`s, or a review loop-back, states what's pending in its artifact. This is exactly what the hydrate protocol already prescribes — a handoff adds no new ceremony.
+
+## In-stage subagents — parallel helpers within one stage
+
+A stage may spawn **in-stage subagents** — parallel helpers running *within one stage on one platform* — to go wider or get independent eyes: `explore-source`/`spec`/`plan` fan out wide reads, `coding` parallelizes independent steps, `review` can run an opt-in panel of independent reviewers (default: one pass), `debug` delegates deep/noisy investigations, and `research` fans out query angles. This is a *different axis* from Agent handoff above: handoff moves a task **between** platforms/stages; in-stage subagents are transient helpers **inside** a single stage that leave no pipeline state of their own. Whichever platform runs the stage, these invariants hold:
+
+- **The main thread owns the state.** Only the stage's main thread writes `tasks/`, ticks `S#`/`AC#`, and runs the gate. Subagents produce input — findings, draft code, read summaries — they never checkpoint the task or decide its outcome. Agents assist; the main thread decides.
+- **Verify every agent claim before trusting it.** A subagent's confident-but-wrong path, symbol, or finding becomes a "verified" fact the moment you act on it. Spot-check anything an agent reports (a cited path must exist, a claimed bug must reproduce) before it enters an artifact or the verdict.
+- **Capability fallback — delegation is an optimization, never a precondition.** Platforms differ in whether (and how) they can spawn subagents. If in-stage subagents aren't available, the stage does the *same work inline in the main thread* — the deliverable is never skipped, narrowed, or degraded because parallel helpers were unavailable. Every "delegate to a subagent" instruction in a skill is shorthand for "delegate **if you can**, else do it inline."
 
 ## Flow integrity — no silent shortcuts, no missing traces
 

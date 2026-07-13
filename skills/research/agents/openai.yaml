@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research"
+  short_description: "Research a topic with the best available search tools"
+  default_prompt: "Use $research to research the topic — pick the strongest search tool available (specialized MCP search first), read primary sources, verify claims, and finish with a complete cited report saved to docs/research/."

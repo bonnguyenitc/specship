@@ -158,10 +158,23 @@ that was both paused **and** archived is fully re-activated on resume (moved out
 | `review` | `review.md` | The full gate passes, `AC#` items are verified, and a commit/PR draft is written. |
 | `debug` | `debug.md` | A defect is reproduced, fixed minimally, and verified with regression coverage when possible. |
 | `ship` | A complete task run | `spec → plan → coding → review` runs end to end, stopping only on blockers. |
+| `research` | A cited research summary (chat, or `docs/research/*.md` on request) | The question is answered from verified, dated sources using the strongest search tool available. |
 
-`explore-source` and `ship` are not stages either: `explore-source` is a one-time
-codebase mapping that every stage reads, and `ship` is an orchestrator that runs
-the four stages back to back.
+`explore-source`, `ship`, and `research` are not stages: `explore-source` is a
+one-time codebase mapping that every stage reads, `ship` is an orchestrator that
+runs the four stages back to back, and `research` is a standalone helper that
+answers external-fact questions (libraries, APIs, "latest X") — preferring a
+specialized MCP search tool over generic web search — and never writes to `tasks/`.
+
+### Per-stage models (Claude Code)
+
+Each stage skill declares a `model:` in its SKILL.md frontmatter, so every phase runs on the model best suited to it.
+The reasoning-heavy stages (`spec`, `plan`, `review`, `debug`) default to `opus`; `coding` defaults to `sonnet`; every other skill inherits the session model.
+Claude Code switches to the declared model while the skill runs and returns to the session model afterwards.
+
+Only Claude Code honors the field - Codex, Cursor, Gemini CLI, Antigravity, and the adapter agents ignore unknown frontmatter, so the same skill files work everywhere.
+To change the mapping in your project, edit the `model:` line in the installed skill (e.g. `.claude/skills/coding/SKILL.md`) - aliases (`fable`, `opus`, `sonnet`, `haiku`), full model IDs, and `inherit` are accepted.
+Note that `specship update` and `init --force` restore the shipped defaults.
 
 ### Lifecycle skills
 
@@ -194,9 +207,13 @@ stops only on blocker questions, destructive actions, or review failures.
 
 | Command | What it does |
 | --- | --- |
-| `init <agents>` | Install the workflow for any supported agent flag, or every adapter with `--all`. |
+| `init <agents>` | Install the workflow for any supported agent flag, or every adapter with `--all`. With no agent flags on a terminal, picks interactively. |
 | `update` | Refresh skills and config for whatever agents are already installed in the project. |
+| `uninstall <agents>` | Remove an agent's skills and config. Shared files (`.specship/skills/`, a shared `AGENTS.md` block) are kept while another installed agent still uses them; merge blocks are stripped without touching your surrounding content. |
 | `list` | Show which agents are installed here. |
+| `doctor` | Audit the install: skill files drifted from the packaged version, broken config, stale version stamps. Exits non-zero when problems are found. |
+| `check` | Validate `tasks/` against the workflow contract (stage preconditions, ID cross-references, timestamps). Exits non-zero on violations — wire it into CI. |
+| `tasks` | List the active tasks and where each one stands (`tasks/archive/` is hidden). |
 
 Options:
 
@@ -204,12 +221,22 @@ Options:
 | --- | --- |
 | `--dir <path>` | Target project. Defaults to the current working directory. |
 | `--force` | Overwrite modified skill files. By default, local edits are kept. |
+| `--dry-run` | For `init`/`update`/`uninstall`: print what would change without writing. |
 | `-v`, `--version` | Print the CLI version. |
 | `-h`, `--help` | Print help. |
 
 ```bash
 npx specship update
 npx specship list
+npx specship doctor
+npx specship check    # e.g. as a CI step before merging
+npx specship tasks
+```
+
+Gate your CI on the contract with a step like:
+
+```yaml
+- run: npx specship check
 ```
 
 ## What `init` Installs
@@ -235,9 +262,14 @@ including Aider, Devin, Jules, Amp, Zed, Junie, Factory, goose, Augment Code,
 and similar agents. Tool-specific adapters are still provided where the tool has
 a stronger native rule location.
 
+`--codex` and `--agents` share one `AGENTS.md` template whose pointer covers
+both skill locations, so installing either (or both, in any order) yields the
+same block.
+
 `merge` inserts an idempotent `<!-- specship:start -->…<!-- specship:end -->`
-block into your existing file. Re-running `init` updates that block without
-duplicating it, and creates the file if absent.
+block into your existing file, stamped with the installing version. Re-running
+`init` updates that block without duplicating it, and creates the file if
+absent.
 
 `write` drops a standalone config file, such as a Cursor rule.
 
@@ -285,8 +317,7 @@ recorded against the contract.
 ```text
 skills/                 # canonical skill playbooks shipped to each agent
 .claude/CLAUDE.md       # pointer template → installed as CLAUDE.md
-.codex/AGENTS.md        # pointer template → installed as AGENTS.md
-.agents/AGENTS.md       # universal AGENTS.md-compatible pointer template
+.agents/AGENTS.md       # AGENTS.md pointer template (shared by --codex and --agents)
 .gemini/GEMINI.md       # pointer template → installed as GEMINI.md
 .cursor/WORKFLOW.mdc    # pointer template → installed as .cursor/rules/specship.mdc
 .antigravity/rules.md   # pointer template → installed as .agent/rules/specship.md

@@ -12,6 +12,7 @@ Stages:
 - `debug` → when a defect appears, log it in `tasks/TASK-<ID>/debug.md`, fix, resume
 - `ship` → autopilot: given a feature request, run spec → plan → coding → review end-to-end
 - `resume-task`, `pause-task`, `archive-task` → task lifecycle without losing pipeline state
+- `research` → answer an external-fact question with the strongest search tool available (specialized MCP search first) → complete cited report in `docs/research/`
 
 Maintain shared state in `tasks/TASK-<ID>/`: read `task.md` first, update it last,
 keep IDs stable, and timestamp every log entry as `YYYY-MM-DD HH:MM +TZ` using
