@@ -1,12 +1,12 @@
 {
   "name": "specship",
-  "version": "0.1.17",
+  "version": "0.2.0",
   "description": "Install a staged spec→plan→coding→review agent workflow (skills + per-agent config) into any project. Works with Claude Code, Codex, Gemini CLI, Cursor, Antigravity, Copilot, Windsurf, Cline, Roo Code, and AGENTS.md-compatible agents.",
   "bin": {
     "specship": "bin/cli.js"
   },
   "scripts": {
-    "test": "node test/cli.test.js"
+    "test": "node test/pipeline.test.js && node test/cli.test.js"
   },
   "files": [
     "bin",

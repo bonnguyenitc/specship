@@ -70,6 +70,11 @@ Fanning out is an application of the **in-stage subagents** doctrine (`../WORKFL
 - Confirm all plan steps are implemented and their checks pass — state results plainly (if a test fails or a step was skipped, say so with the output).
 - Summarize what changed (files + behavior) and note any follow-ups or deviations from the plan.
 
+## External phase execution
+If an orchestrator launched you for the **`coding` phase only** (`../WORKFLOW.md` → External phase execution), the rules there override the handoff below. In short: confirm the envelope with `specship check TASK-<ID> --phase coding --actor <codex|claude-code> --expect-revision <n> --json` (exit 0 or stop), work from the named task's `plan.md`/`spec.md` alone (don't ask TDD vs conventional — apply the default in "Before you write"), tick the `S#`s you complete, then checkpoint `task.md` **last** with `revision` +1 and **stop**. Don't ask about reviewing, don't invoke `review` or `debug`, don't call `ship` — skip "Next step" entirely. A blocker bug means checkpointing `debug` as the next phase for the orchestrator, not running `debug` yourself.
+
+**Addressing review findings means handing back to review.** If you were launched because `review: changes-requested` classified the loop-back as `coding`, the verdict stands until you say the work landed: finish the findings, leave `coding: done` with every `S#` ticked, and set `next_phase: review` so the gate re-runs the review (`../WORKFLOW.md` → the gate table). Leaving `next_phase: coding` just relaunches you on work you already did.
+
 ## Next step
 Once the implementation is complete, **ask the user whether they want to review and wrap up** — e.g. "Bạn có muốn tôi review lại và hoàn tất không?".
 

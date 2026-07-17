@@ -111,6 +111,9 @@ When the spec changes later, **edit `spec.md` in place** — don't start a new f
 - Keep existing IDs stable; only append new `R#/AC#/Q#`. If a requirement is dropped, mark it `~~R2 (removed 2026-06-11 17:12 +07)~~` rather than deleting, so `plan`/`review` references don't dangle.
 - If acceptance criteria changed, flag downstream `plan.md` / `review.md` as possibly stale.
 
+## External phase execution
+If an orchestrator launched you for the **`spec` phase only** (`../WORKFLOW.md` → External phase execution), the rules there override the handoff below. In short: confirm the envelope with `specship check TASK-<ID> --phase spec --actor <codex|claude-code> --expect-revision <n> --json` (exit 0 or stop), work from the named task's artifacts alone, write `spec.md`, then checkpoint `task.md` **last** with `revision` +1 and **stop**. Don't ask about planning, don't invoke `plan`, don't call `ship` — skip "Next step" entirely and let the orchestrator decide.
+
 ## Next step
 Once the understanding is confirmed (open questions resolved or acknowledged), **ask the user whether they want to move on to planning** — e.g. "Bạn có muốn tôi lên plan triển khai không?".
 

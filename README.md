@@ -176,6 +176,8 @@ Only Claude Code honors the field - Codex, Cursor, Gemini CLI, Antigravity, and 
 To change the mapping in your project, edit the `model:` line in the installed skill (e.g. `.claude/skills/coding/SKILL.md`) - aliases (`fable`, `opus`, `sonnet`, `haiku`), full model IDs, and `inherit` are accepted.
 Note that `specship update` and `init --force` restore the shipped defaults.
 
+If an external tool picks the model per phase, install with `--profile orchestrated` instead of hand-editing: the stage skills are then generated with `model: inherit` so the caller's choice wins, and `update` keeps it that way. See [External orchestration](#external-orchestration).
+
 ### Lifecycle skills
 
 These manage a task's `status` and location around the pipeline — see
@@ -212,7 +214,8 @@ stops only on blocker questions, destructive actions, or review failures.
 | `uninstall <agents>` | Remove an agent's skills and config. Shared files (`.specship/skills/`, a shared `AGENTS.md` block) are kept while another installed agent still uses them; merge blocks are stripped without touching your surrounding content. |
 | `list` | Show which agents are installed here. |
 | `doctor` | Audit the install: skill files drifted from the packaged version, broken config, stale version stamps. Exits non-zero when problems are found. |
-| `check` | Validate `tasks/` against the workflow contract (stage preconditions, ID cross-references, timestamps). Exits non-zero on violations — wire it into CI. |
+| `check` | Validate `tasks/` against the workflow contract (stage preconditions, ID cross-references, timestamps). Exits non-zero on violations — wire it into CI. Given a `TASK-<ID>` and `--phase`, validates one phase gate and prints JSON instead — see [External orchestration](#external-orchestration). |
+| `inspect <TASK-ID>` | Print one task's normalized state as JSON. Read-only; never writes. |
 | `tasks` | List the active tasks and where each one stands (`tasks/archive/` is hidden). |
 
 Options:
@@ -222,8 +225,18 @@ Options:
 | `--dir <path>` | Target project. Defaults to the current working directory. |
 | `--force` | Overwrite modified skill files. By default, local edits are kept. |
 | `--dry-run` | For `init`/`update`/`uninstall`: print what would change without writing. |
+| `--profile <name>` | `interactive` (default) or `orchestrated` — see [External orchestration](#external-orchestration). Persisted in `.specship/install.json`; omit it to keep the project's current profile. |
 | `-v`, `--version` | Print the CLI version. |
 | `-h`, `--help` | Print help. |
+
+Task-scoped options for `check` / `inspect`:
+
+| Option | Meaning |
+| --- | --- |
+| `--phase <name>` | `spec` \| `plan` \| `coding` \| `review` \| `debug`. |
+| `--actor <id>` | `codex` \| `claude-code` — the agent that will run the phase. |
+| `--expect-revision <n>` | Fail if the task has moved past revision `<n>`. |
+| `--json` | Accepted for explicitness. These two commands always emit JSON on stdout — they exist to be parsed. |
 
 ```bash
 npx specship update
@@ -238,6 +251,87 @@ Gate your CI on the contract with a step like:
 ```yaml
 - run: npx specship check
 ```
+
+## External orchestration
+
+Everything above is the **interactive** flow: a stage finishes, asks you, and invokes the next one. If you're building a tool that owns its own task board, you may want the opposite — **you** decide what runs next, launching one agent per phase with a model you pick.
+
+That's the `orchestrated` profile. It's **opt-in and additive**: nothing changes for interactive users, `ship` still works, and every existing install keeps behaving exactly as before.
+
+```bash
+npx specship init --codex --claude --profile orchestrated
+```
+
+Certified for **Codex** and **Claude Code** only in v1. Every other agent (Gemini CLI, Cursor, Antigravity, Copilot, Windsurf, Cline, Roo) stays fully supported for the interactive workflow, but isn't a certified external actor yet.
+
+Two things change under this profile, and nothing else:
+
+- Claude stage skills install with `model: inherit`, so the model *you* pass on the CLI wins instead of the skill's own default.
+- The choice is persisted to `.specship/install.json`, so `update` and `doctor` keep honoring it rather than silently restoring the defaults.
+
+Codex output is byte-for-byte identical either way.
+
+### Driving it
+
+Ask what should run next, then validate the gate before you launch:
+
+```bash
+npx specship inspect TASK-001 --json
+```
+
+```json
+{
+  "schema": 2,
+  "task": "TASK-001",
+  "title": "demo",
+  "stage": "coding",
+  "status": "active",
+  "artifacts": { "spec": "confirmed", "plan": "approved", "coding": "in-progress",
+                 "review": "missing", "debug": "missing" },
+  "blocked_reason": null,
+  "next_phase": "coding",
+  "resume_phase": null,
+  "revision": 7,
+  "updated": "2026-07-07 11:00 +07",
+  "valid": true,
+  "issues": []
+}
+```
+
+`next_phase` is what to launch. Then gate the launch:
+
+```bash
+npx specship check TASK-001 --phase coding --actor codex --expect-revision 7 --json
+```
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | The gate is valid — run the phase. |
+| `1` | Task state or gate invalid — read `.issues`. |
+| `2` | Bad input, unsupported actor/schema, or no such task. |
+
+The agent you launch runs **exactly that one phase**, checkpoints, and stops — it won't ask to advance, won't invoke a neighbouring stage, and won't call `ship`. Deciding what comes next is your job, and `inspect` is how you decide.
+
+`--expect-revision` is how you detect a stale writer: `revision` increments once per checkpoint, so if the task moved on since you handed it out, the check fails instead of overwriting. It's a detector, not a lock — still run one phase writer per task at a time.
+
+The gate is **one command for the whole envelope**: besides the phase itself it verifies the task id and identity, that every artifact the map declares exists on disk with the status it claims, that `coding: done` really has every `S#` ticked, and that `stage` and the map don't contradict each other. `check` with any task-scoped option but no task id is bad input (`2`), never a green light.
+
+### `task.md` schema v2
+
+Four additive fields; `stage`/`status`/`artifacts` remain the source of truth:
+
+```yaml
+schema: 2            # absent → v1 (legacy)
+revision: 7          # monotonic, +1 per checkpoint
+next_phase: coding   # what to run next; absent when the task is done
+resume_phase: coding # while debug is open: the phase it interrupted
+```
+
+`next_phase` is derived from the artifact states and may only agree with them — except for the one thing state cannot express: a `review: changes-requested` verdict stands until someone says it is satisfied, so the review classifies the loop-back as `coding` or `debug`, and whoever addresses the findings sets `next_phase: review` to hand back for the re-review. `resume_phase` is the debug loop's equivalent: the phase debug interrupted, which is *not* derivable — debug entered from a review and debug entered from the coding that review asked for look identical in every other field.
+
+**Migration is nothing.** Old tasks have none of these fields; they read as schema 1 / revision 0 and keep working. Reading never rewrites them — the first external checkpoint upgrades a task in place, preserving every artifact and the whole Pipeline Log. A legacy task that has already progressed past `spec` contradicts those all-`missing` defaults, so run it interactively until a checkpoint gives it a real map.
+
+The full contract — the request envelope, the transition gate table, write ordering, and the actor rules — lives in `skills/WORKFLOW.md` → *External phase execution*, which installs alongside the skills.
 
 ## What `init` Installs
 

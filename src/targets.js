@@ -6,15 +6,26 @@
 //              false → write the file as-is (standalone config, e.g. a Cursor rule).
 // `manifest`: optional per-skill vendor file in `skills/<skill>/agents/` to install
 //             for this target only (others skip the whole `agents/` dir).
+// `actor`: this target's canonical id when an external orchestrator runs one phase
+//          on it (skills/WORKFLOW.md → External phase execution). Only targets that
+//          carry an `actor` are certified for orchestrated mode; the rest stay
+//          legacy install targets. The id is the label written to the Pipeline Log.
+// `modelFrontmatter`: this agent honours a `model:` line in a skill's frontmatter,
+//                     so the orchestrated profile must neutralise it (→ `inherit`)
+//                     to let the launcher's explicit model win. Agents without it
+//                     ignore the line, so their output never varies by profile.
 module.exports = {
   claude: {
     label: 'Claude Code',
     skillsDest: '.claude/skills',
     doc: { src: '.claude/CLAUDE.md', dest: 'CLAUDE.md', merge: true },
+    actor: 'claude-code',
+    modelFrontmatter: true,
   },
   codex: {
     label: 'Codex',
     skillsDest: '.codex/skills',
+    actor: 'codex',
     // Shares the AGENTS.md template with `agents`: both merge the same block
     // (fallback path order inside covers either install), so merge order
     // between the two targets can't change the outcome.

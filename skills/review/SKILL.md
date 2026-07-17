@@ -101,6 +101,13 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - **Do not run `git add` / `commit` / `push`** — the user runs these themselves. Hand them the drafted message to use.
 - **Approval gate:** set `status: approved` only when all `AC#`/`S#` are ticked, the gate is green, and **no unaddressed `blocker` finding remains**. Open `minor` findings don't block approval — move them to **Follow-ups** explicitly (never drop them silently). Anything else is `changes-requested`, with what's missing listed in Findings.
 
+## External phase execution
+If an orchestrator launched you for the **`review` phase only** (`../WORKFLOW.md` → External phase execution), the rules there override the handoff below. In short: confirm the envelope with `specship check TASK-<ID> --phase review --actor <codex|claude-code> --expect-revision <n> --json` (exit 0 or stop), work from the named task's artifacts and diff alone, write `review.md`, then checkpoint `task.md` **last** with `revision` +1 and **stop**. Don't invoke `coding` or `debug`, don't call `ship` — skip "Next step" entirely.
+
+**Changes-requested must classify the loop-back.** Artifact state alone can't say whether the fix is ordinary work or a defect hunt, so when you set `review: changes-requested` you must also set `next_phase:` to `coding` (findings are planned work) or `debug` (findings are a defect needing a repro). Leaving it unset fails the gate — `specship check` refuses to guess.
+
+**Re-review closes the loop.** A `changes-requested` verdict outranks the later gates until it is satisfied, so the stage that addresses the findings hands back by setting `next_phase: review` (`../WORKFLOW.md` → the gate table). When you are relaunched for that re-review, you are re-running against a `changes-requested` `review.md`: don't start a second review file — update this one in place per "Re-review after a loop-back", tick the findings whose fixes you verified, and set `review: approved` only once no unaddressed blocker remains.
+
 ## Next step
 - **`approved`** — the task is done: hand the user the drafted commit/PR message; they run git themselves.
 - **`changes-requested`** — ask the user whether to loop back: invoke the `coding` skill to address the Findings (or `debug` if a finding is a defect), then re-run this review. Keep the same `TASK-<ID>`; the Findings are the input for the fix. (Under `ship`, loop back automatically — its loop cap applies.)

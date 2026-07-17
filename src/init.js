@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const TARGETS = require('./targets');
+const { DEFAULT_PROFILE, readProfile } = require('./install-profile');
 
 const PKG_ROOT = path.join(__dirname, '..');
 const VERSION = require('../package.json').version;
@@ -19,39 +20,64 @@ function blockRe() {
   return new RegExp(`${MARK_START}[\\s\\S]*?${MARK_END}\\n?`);
 }
 
-function copyFile(src, dest, force, acc, dry) {
+// `render(src)` returns the bytes a source file should have *in the project*.
+// Every read of a packaged skill goes through it, so the profile transform is
+// applied in exactly one place and install/doctor can never disagree.
+const passthrough = (src) => fs.readFileSync(src);
+
+function copyFile(src, dest, force, acc, dry, render = passthrough) {
+  const want = render(src);
   if (fs.existsSync(dest) && !force) {
-    if (!fs.readFileSync(src).equals(fs.readFileSync(dest))) acc.skipped++;
+    if (!want.equals(fs.readFileSync(dest))) acc.skipped++;
     return; // identical or user-modified → leave it (use --force to overwrite)
   }
   if (!dry) {
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.copyFileSync(src, dest);
+    fs.writeFileSync(dest, want);
   }
   acc.written++;
 }
 
-function copyDir(src, dest, force, acc = { written: 0, skipped: 0 }, { skipDirs, dry } = {}) {
+function copyDir(src, dest, force, acc = { written: 0, skipped: 0 }, { skipDirs, dry, render } = {}) {
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     if (IGNORE.has(entry.name)) continue;
     if (entry.isDirectory() && skipDirs && skipDirs.has(entry.name)) continue;
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
-    if (entry.isDirectory()) copyDir(s, d, force, acc, { skipDirs, dry });
-    else copyFile(s, d, force, acc, dry);
+    if (entry.isDirectory()) copyDir(s, d, force, acc, { skipDirs, dry, render });
+    else copyFile(s, d, force, acc, dry, render);
   }
   return acc;
 }
 
 // Copy each skill's vendor manifest (`<skill>/agents/<manifestName>`) for one target.
-function copyManifests(srcSkills, destSkills, manifestName, force, acc, dry) {
+function copyManifests(srcSkills, destSkills, manifestName, force, acc, dry, render) {
   for (const entry of fs.readdirSync(srcSkills, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     const m = path.join(srcSkills, entry.name, VENDOR_DIR, manifestName);
     if (fs.existsSync(m)) {
-      copyFile(m, path.join(destSkills, entry.name, VENDOR_DIR, manifestName), force, acc, dry);
+      copyFile(m, path.join(destSkills, entry.name, VENDOR_DIR, manifestName), force, acc, dry, render);
     }
   }
+}
+
+// The five pipeline stages are the only skills that pin a Claude model.
+const STAGE_SKILLS = new Set(['spec', 'plan', 'coding', 'review', 'debug']);
+
+// Under the orchestrated profile the launcher passes an explicit model on the
+// CLI, so an installed Claude stage skill must not pin one of its own - it
+// rewrites `model: opus|sonnet` to `model: inherit`. This touches *generated*
+// output only; the packaged skills keep their interactive defaults, and every
+// other target (Codex included) is byte-for-byte unaffected.
+function skillRenderer(name, profile) {
+  if (profile !== 'orchestrated' || !TARGETS[name].modelFrontmatter) return passthrough;
+  const srcRoot = path.join(PKG_ROOT, 'skills');
+  return (src) => {
+    const buf = fs.readFileSync(src);
+    const parts = path.relative(srcRoot, src).split(path.sep);
+    if (parts.length !== 2 || parts[1] !== 'SKILL.md' || !STAGE_SKILLS.has(parts[0])) return buf;
+    return Buffer.from(buf.toString('utf8').replace(/^model: .*$/m, 'model: inherit'));
+  };
 }
 
 // Insert/replace an idempotent specship marker block in an existing file,
@@ -89,16 +115,17 @@ function writeDoc(srcFile, destFile, force, dry) {
   return exists ? 'updated' : 'written';
 }
 
-function initTarget(name, projectDir, { force = false, dry = false } = {}) {
+function initTarget(name, projectDir, { force = false, dry = false, profile = DEFAULT_PROFILE } = {}) {
   const t = TARGETS[name];
   const lines = [];
 
   const srcSkills = path.join(PKG_ROOT, 'skills');
   const destSkills = path.join(projectDir, t.skillsDest);
+  const render = skillRenderer(name, profile);
   // The shared skill tree goes to every agent; the per-vendor `agents/` manifests
   // are skipped here and only the target's own one is copied (if any).
-  const r = copyDir(srcSkills, destSkills, force, undefined, { skipDirs: new Set([VENDOR_DIR]), dry });
-  if (t.manifest) copyManifests(srcSkills, destSkills, t.manifest, force, r, dry);
+  const r = copyDir(srcSkills, destSkills, force, undefined, { skipDirs: new Set([VENDOR_DIR]), dry, render });
+  if (t.manifest) copyManifests(srcSkills, destSkills, t.manifest, force, r, dry, render);
   let s = `skills  → ${t.skillsDest}/ (${r.written} ${dry ? 'would be written' : 'written'}`;
   if (r.skipped) s += `, ${r.skipped} kept - use --force to overwrite`;
   lines.push(s + ')');
@@ -215,18 +242,23 @@ function expectedSkillFiles(t) {
 
 // Audit one installed target: skills drift vs the packaged tree, config
 // marker/template integrity, version stamp vs the running package version.
-function doctorTarget(name, projectDir) {
+// `profile` is resolved by the caller (cmdDoctor), which owns refusing an
+// unreadable manifest - auditing must never guess it.
+function doctorTarget(name, projectDir, profile = DEFAULT_PROFILE) {
   const t = TARGETS[name];
   const problems = [];
   const srcSkills = path.join(PKG_ROOT, 'skills');
   const destSkills = path.join(projectDir, t.skillsDest);
+  // Audit against what *this profile* should have generated, not the default -
+  // otherwise every orchestrated Claude stage skill would read as drifted.
+  const render = skillRenderer(name, profile);
 
   const missing = [];
   const drifted = [];
   for (const rel of expectedSkillFiles(t)) {
     const d = path.join(destSkills, rel);
     if (!fs.existsSync(d)) missing.push(rel);
-    else if (!fs.readFileSync(path.join(srcSkills, rel)).equals(fs.readFileSync(d))) drifted.push(rel);
+    else if (!render(path.join(srcSkills, rel)).equals(fs.readFileSync(d))) drifted.push(rel);
   }
   const nameSome = (list) => list.slice(0, 5).join(', ') + (list.length > 5 ? ` (+${list.length - 5} more)` : '');
   if (missing.length) problems.push(`missing skill file(s): ${nameSome(missing)} - run \`specship update\``);

@@ -68,6 +68,11 @@ Update the entry's `status` as you go, and bump `updated:` on each change so the
 - State plainly: reproduced? root cause found? fix verified with the full suite green?
 - **Do not run `git add` / `commit` / `push`** unless the user asks.
 
+## External phase execution
+If an orchestrator launched you for the **`debug` phase only** (`../WORKFLOW.md` → External phase execution), the rules there override the handoff below. In short: confirm the envelope with `specship check TASK-<ID> --phase debug --actor <codex|claude-code> --expect-revision <n> --json` (exit 0 or stop), work from the named task's artifacts and the repro alone, write `debug.md` plus the regression test, then checkpoint `task.md` **last** with `revision` +1 and **stop**. Don't invoke the stage you interrupted, don't call `ship` — skip "Next step" entirely.
+
+**Carry the resume phase in the state, not in your head.** While bugs are open (`debug: open-bugs`), `resume_phase:` must name the phase debug interrupted — `coding` or `review`. When you clear the last blocker bug (`debug: clear`), set `next_phase:` back to that phase and **clear `resume_phase:`**. Both halves are checked: open bugs without a `resume_phase`, or a cleared debug that left one behind, fail the gate.
+
 ## Next step
 The `BUG#` entry and its regression test are the input for whatever stage resumes.
 

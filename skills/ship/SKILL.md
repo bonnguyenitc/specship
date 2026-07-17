@@ -42,5 +42,8 @@ Stop, checkpoint, and report (never push through) when:
 
 On a hard stop, make sure `task.md` reflects the true stage/status and the Pipeline Log says why autopilot stopped — any stage skill can then resume manually from that state.
 
+## Not an external phase
+`ship` is autopilot: it deliberately runs the *whole* pipeline in one go. That makes it the opposite of external orchestration, where the launcher owns the pipeline and each agent runs exactly one phase and stops (`../WORKFLOW.md` → External phase execution). An orchestrator therefore never launches `ship`, and `ship` is never a value of `--phase` — it launches `spec`/`plan`/`coding`/`review`/`debug` individually instead. Nothing here changes for interactive users: `ship` stays the normal autopilot entry point.
+
 ## When done
 One final report covering the whole run: stages executed, key assumptions made in the spec, `AC#` verification results, gate results, files changed, bugs hit (`BUG#`), deviations from the plan, the drafted commit message from `review.md`, and follow-ups. The task is `done` only when `review` says `approved`.

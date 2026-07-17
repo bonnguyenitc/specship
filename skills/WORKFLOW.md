@@ -141,6 +141,83 @@ The `tasks/` contract is agent-agnostic: a task may move between agent platforms
 - **Label your Pipeline Log lines with the acting agent.** Each line may name who ran it: `- <ts> <stage> (<agent>): <event>`. The `<agent>` label is **self-reported free text** (`claude-code`, `codex`, `cursor`, …) — no registry, no validation. If your platform has no distinctive name, **omit the label** rather than invent noise; unlabeled lines stay valid. The format is additive, so tasks written before this convention never need rewriting.
 - **Mid-stage handoff resumes from the artifacts' own progress markers.** Coding half-done → the next agent resumes from the ticked `S#`s in `plan.md`; a spec with open blocker `Q#`s, or a review loop-back, states what's pending in its artifact. This is exactly what the hydrate protocol already prescribes — a handoff adds no new ceremony.
 
+## External phase execution — one phase, launched from outside
+
+Everything above describes the **interactive** flow: a stage finishes, asks the user, and invokes its successor. An **external orchestrator** (a tool that owns its own task board) instead runs **one phase at a time**: it launches an agent for a single phase, that agent checkpoints and stops, and the orchestrator decides what runs next by reading the task artifacts. This mode is **opt-in** — nothing here changes the interactive flow or `ship`.
+
+**The request envelope.** A launch supplies four things, and the stage must not infer any of them from conversation context:
+
+| Field | Value |
+|---|---|
+| task | an exact `TASK-<ID>` — ASCII, no separators, matching its folder and frontmatter |
+| phase | exactly one of `spec` \| `plan` \| `coding` \| `review` \| `debug` |
+| actor | `codex` or `claude-code` — the only certified external actors in v1 |
+| expected revision | the `revision:` the orchestrator last saw; a mismatch means the task moved on |
+
+Other install targets (Gemini CLI, Cursor, Antigravity, Copilot, Windsurf, Cline, Roo) remain fully supported for the interactive workflow, but are **not** certified to run an external phase in v1 — `specship check --actor <them>` exits 2.
+
+**A stage in external mode runs exactly one phase, then stops.** It hydrates from the named task's artifacts, does its own job, checkpoints, and ends. It must **not**: ask the user to advance, invoke a predecessor or successor skill, call `ship` or `resume-task`, or assume any prior conversation. The orchestrator — not the stage — decides the next launch.
+
+**Validate before mutating (fail closed).** Before writing anything, confirm the task id is safe, the folder / `task.md` `task:` / every artifact's `task:` all agree, the preconditions in "Flow integrity" hold, and the revision still matches. If any fails, **stop and report** — never allocate another id, never write to a different task, never guess. One command does all of it:
+
+```sh
+specship check TASK-<ID> --phase <phase> --actor <codex|claude-code> --expect-revision <n> --json
+# exit 0 = the gate is valid, run the phase
+# exit 1 = task state or gate invalid  (read .issues)
+# exit 2 = bad input, unsupported actor/schema, or no such task
+specship inspect TASK-<ID> --json      # read-only normalized state; never writes
+```
+
+**Checkpoint order is part of the contract:** write your **stage artifact first**, then **`task.md` last**, incrementing `revision` by **exactly one**. `task.md` is the commit point — a crash after the artifact but before `task.md` leaves the task simply not-yet-advanced (safe to retry), never forward-dated onto work that did not land. Two agents starting from the same revision cannot both checkpoint: the second one's `--expect-revision` no longer matches. This detects a stale writer; it is **not** a lock — the orchestrator must still run one phase writer at a time.
+
+**Blocked works the same as always** (see "Status values"): set `status: blocked`, fill `Blocked by:`, log it, and stop. The gate then keeps the *current* phase as the retry target — a blocker never advances the task.
+
+### `task.md` schema v2 — additive fields
+
+v2 adds four fields. `stage`, `status` and `artifacts:` remain the task-progress **source of truth**; the new fields make the transition machine-readable:
+
+```yaml
+schema: 2            # absent → v1 (legacy); read with safe defaults, never rewritten on read
+revision: 7          # monotonic, +1 per checkpoint; v1 defaults to 0
+next_phase: coding   # the phase to run next; null/absent when nothing is left
+resume_phase: coding # only while debug is open: the phase debug interrupted (coding|review)
+```
+
+The gates below are **derived from the artifact states**, so `next_phase` may only ever *agree* with them — `specship check` rejects a contradiction. Its one load-bearing job is classifying the review loop-back, which artifact state alone cannot express.
+
+**The rows are ordered, and the first match wins** — they overlap, so reading them as independent rules gives the wrong answer:
+
+| # | State | `next_phase` |
+|---|---|---|
+| 1 | debug `open-bugs` | `debug` (and `resume_phase` **must** name `coding` or `review`) |
+| 2 | spec not `confirmed` | `spec` |
+| 3 | spec `confirmed`, plan not `approved` | `plan` |
+| 4 | review `changes-requested` | the review **must** classify the loop-back: `coding` (ordinary work), `debug` (a defect), or `review` once the fix has landed — see below |
+| 5 | plan `approved`, coding not `done` | `coding` |
+| 6 | coding `done`, review not `approved` | `review` |
+| 7 | review `approved` | *none* — the task is done |
+| — | any blocker | unchanged — the current phase stays the retry target |
+
+**A `changes-requested` review must be told when it is satisfied.** Row 4 outranks rows 5–7, so while the verdict stands the gate answers only what `next_phase` classifies. That includes the way *out*: whoever addresses the findings sets `next_phase: review` at its checkpoint, and the gate then re-runs review (it refuses while `coding` is not `done` — unlanded work is not a fix). Without that, `changes-requested` would be terminal: the gate could only ever return `coding`/`debug`, so the task could never be approved and never reach `done`.
+
+For a defect this is the same loop with `debug` in the middle: review classifies `debug` → debug opens with `resume_phase: review` → debug clears, sets `next_phase: review`, and clears `resume_phase` → review re-runs.
+
+A terminal exit code, free-form "done" text, or an agent stop signal **never** satisfies a gate by itself; only the artifact state does.
+
+**The map must be backed by what is on disk.** `artifacts:` is the gate's only input, so `specship check` also verifies that every artifact it declares exists, that `spec.md`/`plan.md`/`review.md` carry the status the map claims, and that `coding: done` has every `S#` in `plan.md` ticked. A `task.md` promising an `approved` plan that was never written fails the gate — this is the "Flow integrity" precondition the one command enforces.
+
+**`stage` and the map may not contradict each other.** The gate may run *ahead* of `stage` (a stage checkpoints its artifact before the next one starts), and a loop-back or an open bug sends it backwards on purpose. But a gate otherwise *behind* `stage` — `stage: done` with a `spec` gate — means the map is wrong, and it fails the gate rather than re-running finished work.
+
+**Legacy v1 tasks stay readable.** No `schema:`/`revision:`/`artifacts:` → schema 1, revision 0, all artifacts `missing`. Reading never rewrites them, and one still at `stage: spec` is consistent with those defaults, so it can be picked up externally and its first checkpoint upgrades the file in place, preserving every artifact and the whole Pipeline Log. A v1 task that has *progressed* past spec contradicts the all-`missing` defaults (previous rule) and must be run interactively until a checkpoint gives it a real map.
+
+**Pipeline Log labels stay canonical.** External entries use the actor id verbatim — `codex` or `claude-code` — and nothing else:
+
+```markdown
+- 2026-07-17 09:42 +07 coding (claude-code): S3 done, checkpointed at revision 8
+```
+
+The model, routing, session and attempt history belong to the orchestrator, **not** to `task.md`. Don't turn the log into a second routing source.
+
 ## In-stage subagents — parallel helpers within one stage
 
 A stage may spawn **in-stage subagents** — parallel helpers running *within one stage on one platform* — to go wider or get independent eyes: `explore-source`/`spec`/`plan` fan out wide reads, `coding` parallelizes independent steps, `review` can run an opt-in panel of independent reviewers (default: one pass), `debug` delegates deep/noisy investigations, and `research` fans out query angles. This is a *different axis* from Agent handoff above: handoff moves a task **between** platforms/stages; in-stage subagents are transient helpers **inside** a single stage that leave no pipeline state of their own. Whichever platform runs the stage, these invariants hold:

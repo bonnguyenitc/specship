@@ -73,5 +73,8 @@ Confirm with the user — e.g. "Task đang ở stage `<stage>`, tiếp tục v�
 - If the user wants the rest of the pipeline run autonomously instead of stage-by-stage, hand off to `ship` (it resumes mid-pipeline from the current stage).
 - If the user just wanted a status read, stop after step 3 — don't auto-resume.
 
+## Not an external phase
+`resume-task` reconstructs where a task stands and then *hands off to the right stage skill* — it is the interactive counterpart to `ship`. An external orchestrator already knows where the task stands (`specship inspect TASK-<ID> --json` tells it, and `next_phase` names what to run), so it never launches `resume-task`; it launches that phase directly. `resume-task` is never a value of `--phase` (`../WORKFLOW.md` → External phase execution). Nothing here changes for interactive users.
+
 ## When done
 `resume-task` is done once it has handed off to the resume-point skill (or reported a `done`/empty state). Don't claim any stage's work as finished — that's the resumed skill's job to report.

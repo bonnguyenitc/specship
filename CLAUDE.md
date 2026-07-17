@@ -10,7 +10,11 @@ in `skills/`; per-agent templates in `.claude/`, `.codex/`, `.cursor/`,
 
 Always prove a change works before declaring it done:
 
-- `npm test` — zero-dep test suite (`test/cli.test.js`).
+- `npm test` — zero-dep test suite (`test/pipeline.test.js` + `test/cli.test.js`).
+  Fixtures must describe tasks that could actually exist: a `task.md` whose
+  `artifacts:` map names a `confirmed` spec needs `spec.md` on disk to match
+  (use the `filesFor` helper). Fictional fixtures hid a whole class of bugs
+  once — see `tasks/LESSONS.md` L2/L3.
 - Real install: `node bin/cli.js init --all --dir "$(mktemp -d)"`, then inspect
   the resulting tree (marker block in CLAUDE.md, skills copied, codex-only
   `openai.yaml` manifest).

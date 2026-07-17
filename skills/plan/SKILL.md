@@ -82,6 +82,9 @@ Keep it minimal and surgical, and **right-size it**: a small task gets a small p
 
 When the plan changes (including after a `spec.md` update), edit it in place: bump `updated:`, append a dated **Change History** line, keep `S#` IDs stable.
 
+## External phase execution
+If an orchestrator launched you for the **`plan` phase only** (`../WORKFLOW.md` → External phase execution), the rules there override the handoff below. In short: confirm the envelope with `specship check TASK-<ID> --phase plan --actor <codex|claude-code> --expect-revision <n> --json` (exit 0 or stop), work from the named task's `spec.md` alone, write `plan.md`, then checkpoint `task.md` **last** with `revision` +1 and **stop**. Don't ask about coding, don't invoke `coding`, don't call `ship` — skip "Next step" entirely and let the orchestrator decide.
+
 ## Next step
 Once the plan is approved, **ask the user whether they want to start implementing** — e.g. "Bạn có muốn tôi code theo plan này luôn không?".
 
