@@ -86,14 +86,19 @@ Every task lives in its own folder:
 tasks/
 ├── LESSONS.md       # project-wide process lessons (L#), read by every stage
 ├── archive/         # shelved tasks (archive-task) — skipped by active scans
-│   └── TASK-000/    # a whole task folder moved here intact
-└── TASK-001/
+│   └── TASK-20260701-old-importer/   # a whole task folder moved here intact
+└── TASK-20260723-fix-login/
     ├── task.md      # SHARED STATE — stage, status, pipeline log
     ├── spec.md      # requirements (R#), acceptance criteria (AC#)
     ├── plan.md      # ordered steps (S#), each tracing to R#/AC#
     ├── review.md    # gate results, AC verification, commit/PR draft
     └── debug.md     # chronological bug log (BUG#)
 ```
+
+Task ids reuse an existing ticket key (`TASK-PROJ-123`) or are generated as
+`TASK-<YYYYMMDD>-<slug>` (`TASK-20260723-fix-login`) — no shared counter, so
+tasks started in parallel can never mint the same id; older numeric ids like
+`TASK-001` stay valid.
 
 Because state is on disk, not hidden in a chat session, any agent or human can
 pick up a task exactly where the last one left off.

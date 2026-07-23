@@ -24,11 +24,11 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `resum
 
 ## Method
 
-**Input:** an optional task id argument. Accept it in any form — `resume-task 007`, `resume-task 7`, or `resume-task TASK-007` — and **normalize** to the on-disk folder name (`TASK-<ID>`): a bare number maps to `tasks/TASK-<number>/` matched as written (don't re-pad or strip leading zeros — match the actual folder, e.g. `7` and `007` both resolve to `TASK-007` if that's the folder). A non-numeric id (e.g. a ticket key like `PROJ-123`) maps to `TASK-PROJ-123`. If no argument is given, auto-detect (step 1.2).
+**Input:** an optional task id argument. Accept it in any form — `resume-task TASK-20260723-fix-login`, `resume-task fix-login`, `resume-task 007` — and **normalize** to the on-disk folder name (`TASK-<ID>`): a full `TASK-…` id is used as written; a bare **all-digit** argument maps to a legacy numeric folder matched as written (don't re-pad or strip leading zeros — `7` and `007` both resolve to `TASK-007` if that's the folder); anything else (a slug fragment like `fix-login`, or a ticket key like `PROJ-123`) resolves against `tasks/TASK-*` and `tasks/archive/TASK-*` folder names — an **exact match** (`TASK-<argument>`) wins, else a **unique substring match**; several matches → list the candidates and ask. If no argument is given, auto-detect (step 1.2).
 
 ### 1. Locate the task
 Resolve which `TASK-<ID>` to resume, in order:
-1. An explicit id argument (`007`, `7`, `TASK-007`, normalized as above) or one named in the conversation. Look in `tasks/TASK-<ID>/` first; if not there, check `tasks/archive/TASK-<ID>/`. If found in neither, list the available tasks and ask — don't start a new one.
+1. An explicit id argument (`fix-login`, `007`, `TASK-20260723-fix-login`, normalized as above) or one named in the conversation. Look in `tasks/TASK-<ID>/` first; if not there, check `tasks/archive/TASK-<ID>/`. If found in neither, list the available tasks and ask — don't start a new one.
 2. Otherwise, scan `tasks/TASK-*/task.md` and pick the **most recently `updated:`** one. **Skip `tasks/archive/*` entirely, and don't auto-pick a `status: paused` task** — shelved tasks resume only when named explicitly. If several active tasks are close, **list the candidates** (id, title, stage, status, `updated:`) and let the user choose — don't silently guess.
 3. If `tasks/` has no live task, say so (mention any paused/archived ones, resumable by name) and suggest `/spec <request>` (or `/ship`) to start one.
 

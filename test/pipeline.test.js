@@ -27,7 +27,8 @@ function test(name, fn) {
 }
 
 test('isSafeTaskId accepts canonical ids and rejects unsafe ones', () => {
-  for (const ok of ['TASK-001', 'TASK-PROJ-123', 'TASK-42']) {
+  for (const ok of ['TASK-001', 'TASK-PROJ-123', 'TASK-42',
+                    'TASK-20260723-fix-login', 'TASK-20260723-fix-login-x7']) {
     assert.strictEqual(isSafeTaskId(ok), true, `${ok} should be safe`);
   }
   for (const bad of [

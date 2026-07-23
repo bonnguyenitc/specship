@@ -19,7 +19,7 @@ Part of the task pipeline — see `../WORKFLOW.md` → "Task lifecycle". Unlike 
 
 ## Method
 
-**Input:** an optional task id argument in any form (`pause-task 007`, `pause-task 7`, `pause-task TASK-007`), normalized to the on-disk folder name `TASK-<ID>` (a non-numeric ticket key like `PROJ-123` → `TASK-PROJ-123`). No argument → resolve the current task (below).
+**Input:** an optional task id argument in any form (`pause-task TASK-20260723-fix-login`, `pause-task fix-login`, `pause-task 007`), normalized to the on-disk folder name `TASK-<ID>`: a full `TASK-…` id as written; a bare **all-digit** argument maps to a legacy numeric folder matched as written (don't re-pad or strip leading zeros — `7` and `007` both resolve to `TASK-007` if that's the folder); anything else (a slug fragment, or a ticket key like `PROJ-123`) resolves against `tasks/TASK-*` and `tasks/archive/TASK-*` folder names — an exact match (`TASK-<argument>`) wins, else a unique substring match; several matches → list candidates and ask; **none → say so and stop** — never fall back to auto-picking another task. A match under `tasks/archive/` is already shelved: report it and suggest `resume-task <ID>` — don't mutate it. No argument → resolve the current task (below).
 
 1. **Locate** the task: the normalized id argument, one named in conversation, else the most-recently-`updated:` task under `tasks/TASK-*` (skip `tasks/archive/*` and any `status: paused` task — already-shelved tasks aren't auto-picked). If several are active or it's ambiguous, list candidates and ask — don't guess.
 2. **Check it's pausable:** the task must be `active` or `blocked`. If it's already `paused`, say so and stop. If it's `done`, suggest `archive-task` instead.

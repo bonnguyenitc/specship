@@ -55,7 +55,8 @@ Each spec is a **task**. Create the folder **`tasks/TASK-<ID>/`**, then write tw
 
 Choosing `TASK-<ID>`:
 - If the spec/ticket already has an ID (Jira key, GitHub issue #, etc.), reuse it (e.g. `tasks/TASK-PROJ-123/` or `tasks/TASK-42/`).
-- Otherwise use the next sequential number by scanning existing `tasks/TASK-*` folders (`TASK-001`, `TASK-002`, …).
+- Otherwise generate **`TASK-<YYYYMMDD>-<slug>`**: the date from the real clock (`date +%Y%m%d`, never guessed) plus a short (2–4 word) kebab-case slug of the task (e.g. `TASK-20260723-fix-login`). Never derive the id from a counter — counters collide when several tasks start concurrently.
+- If that folder already exists in `tasks/` or `tasks/archive/`, append a short random suffix (`TASK-20260723-fix-login-x7`) — never write into an existing folder. Older numeric ids (`TASK-001`) stay valid; never rename existing folders.
 
 Rules for the IDs inside the file: requirements are `R1, R2, …`; acceptance criteria `AC1, AC2, …`; open questions `Q1, Q2, …`. Never renumber existing IDs (later stages reference them) — only append.
 

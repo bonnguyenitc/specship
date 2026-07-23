@@ -21,7 +21,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug
 
 ## Attach the bug to a task
 - **If the bug belongs to an existing task** (it's in code that task touched, or found during its `coding`/`review`): track it in that task's folder → `tasks/TASK-<ID>/debug.md`.
-- **If it's a standalone bug with no task**: create a new `tasks/TASK-<ID>/` (sequential or from a ticket id) and record it there. A `spec.md` is optional for a pure bugfix, but always keep the debug record.
+- **If it's a standalone bug with no task**: create a new `tasks/TASK-<ID>/` (from a ticket id, or generated per `../WORKFLOW.md` → "Choosing `TASK-<ID>`") and record it there. A `spec.md` is optional for a pure bugfix, but always keep the debug record.
 - If unsure which task owns it, ask the user before picking.
 
 ## Method — scientific debugging

@@ -13,7 +13,9 @@ Legend: **U** = user, **A** = agent. Skill activity is marked `[skill]`.
 
 > **U:** I need a `slugify(text)` utility — lowercase, hyphens, strip accents.
 >
-> `[spec]` hydrates: no `tasks/TASK-*` exists yet → new `TASK-001`.
+> `[spec]` hydrates: no existing task matches, no ticket id → mints a fresh id.
+> (This demo predates the `TASK-<YYYYMMDD>-<slug>` scheme, hence `TASK-001` —
+> grandfathered, like all legacy ids.)
 > `docs/onboarding/*` is missing, so per the contract it offers the upstream skill first:
 >
 > **A:** There are no onboarding docs and I haven't read this codebase. Want me

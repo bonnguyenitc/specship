@@ -45,7 +45,7 @@ tasks/
 ```
 
 ### Choosing `TASK-<ID>`
-Reuse an existing ticket id (Jira/GitHub issue) → `TASK-PROJ-123`; otherwise the next sequential number by scanning **both** `tasks/TASK-*` **and** `tasks/archive/TASK-*` (archived ids are retired, never reused) → `TASK-001`.
+Reuse an existing ticket id (Jira/GitHub issue) → `TASK-PROJ-123`; otherwise generate **`TASK-<YYYYMMDD>-<slug>`** — the date from the real clock (`date +%Y%m%d`, never guessed) plus a short (2–4 word) kebab-case slug of the task → `TASK-20260723-fix-login`. Never derive the id from a counter: counters collide when several tasks start concurrently, a generated id needs no coordination. If the folder already exists in **either** `tasks/TASK-*` **or** `tasks/archive/TASK-*`, append a short random suffix (`TASK-20260723-fix-login-x7`) — never write into an existing folder, and never reuse an archived id. Older numeric ids (`TASK-001`) stay valid; never rename existing folders.
 
 ## The shared state file — `task.md`
 
@@ -112,7 +112,7 @@ Two lifecycle skills manage *whether* a task is in the active set, without touch
 
 Rules:
 - **Pipeline state is preserved.** Pausing or archiving never changes `stage` or any `artifacts:` value — only `status`/location. Resuming picks up exactly where the work stopped.
-- **Every transition leaves a trace.** Each pause/archive/restore bumps `updated:` and appends a dated Pipeline Log line stating the reason (e.g. `- <ts> paused: waiting on design`, `- <ts> archived: superseded by TASK-012`, `- <ts> restored from archive`).
+- **Every transition leaves a trace.** Each pause/archive/restore bumps `updated:` and appends a dated Pipeline Log line stating the reason (e.g. `- <ts> paused: waiting on design`, `- <ts> archived: superseded by TASK-20260722-parser-rewrite`, `- <ts> restored from archive`).
 - **Active scans skip the shelved.** When any skill auto-resolves "the most recently updated task" (`resume-task` with no id, a `ship`/stage hydrate, or `pause-task`/`archive-task` with no id), it ignores `tasks/archive/*` and does **not** auto-pick a `status: paused` task — those are acted on only when named explicitly.
 - **Un-shelving fully re-activates.** Whoever brings a shelved task back (`resume-task`, or `ship`/a stage resuming a named one) must leave it `active`/`blocked` — never resume a task still labelled `paused`. A task that was both paused *and* archived needs both undone: move it out of `archive/` **and** flip `status` back.
 - **Lifecycle skills may write `tasks/`.** Unlike `resume-task` (read-only bar trace repair), `pause-task` and `archive-task` legitimately mutate `task.md` / move the folder — that *is* their job.
