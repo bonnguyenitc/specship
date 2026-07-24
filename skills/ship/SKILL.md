@@ -38,7 +38,7 @@ Stop, checkpoint, and report (never push through) when:
 - The **verifiability gate fails**: an `AC#` with no runnable `verify:`, or an `S#` with no executable `verify:` — autopilot can't self-confirm an unverifiable criterion, so it hands back instead of advancing blind.
 - The next action is **destructive or hard to reverse**: data/schema migrations on real data, deleting things the task didn't create, anything outward-facing.
 - The **review loop cap** is hit, or a gate can't be made green.
-- As always: **never run `git add` / `commit` / `push`** — `review.md` carries the drafted commit/PR message for the user.
+- As always: stages commit their own checkpoints on the task branch (`../WORKFLOW.md` → Git flow), but **never push or merge** — `review.md` carries the Merge block + drafted commit/PR message for the user.
 
 On a hard stop, make sure `task.md` reflects the true stage/status and the Pipeline Log says why autopilot stopped — any stage skill can then resume manually from that state.
 

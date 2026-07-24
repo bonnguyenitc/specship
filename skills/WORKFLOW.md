@@ -25,7 +25,7 @@ Each arrow is a checkpoint **and a handoff**: no skill ends silently. On finishi
 | `spec` | `plan` | `spec.md` (R#/AC#) |
 | `plan` | `coding` | `plan.md` (S# → covers R#/AC#) |
 | `coding` | `review` | code + ticked `S#` in `plan.md` |
-| `review` (approved) | — done | commit/PR draft in `review.md` |
+| `review` (approved) | — done | commit/PR draft + Merge block in `review.md` |
 | `review` (changes-requested) | `coding` (or `debug` for a defect) | Findings in `review.md` |
 | `debug` | the stage it interrupted (or `review` if standalone) | `BUG#` in `debug.md` + regression test |
 
@@ -121,7 +121,7 @@ Rules:
 
 1. **Hydrate (on start).** Resolve the active `TASK-<ID>` (from the user, the conversation, or the most recently updated `tasks/TASK-*`). Read `task.md` to learn the current stage/status, then read the upstream artifacts you depend on (see "Reads" below) and `tasks/LESSONS.md` if present (apply its rules). **Verify your stage preconditions** (see "Flow integrity") — if an upstream artifact is missing or not in the required status, run its skill first (or ask the user); never proceed silently.
 2. **Work.** Do the skill's job, grounded in those artifacts. Cross-reference by ID (`R#`, `AC#`, `S#`, `BUG#`) — never invent parallel numbering.
-3. **Checkpoint (on end).** Write/update your own artifact, then update `task.md`: bump `updated:`, set `stage`/`status`, update the matching `artifacts:` line, and append a dated **Pipeline Log** entry. If you detected a process mistake this stage, record it per "Lessons" below. Then ask the user before auto-advancing to the next skill.
+3. **Checkpoint (on end).** Write/update your own artifact, then update `task.md`: bump `updated:`, set `stage`/`status`, update the matching `artifacts:` line, and append a dated **Pipeline Log** entry. If you detected a process mistake this stage, record it per "Lessons" below. Finish the checkpoint with its **git commit on the task branch** (see "Git flow"). Then ask the user before auto-advancing to the next skill.
 
 ### Per-skill reads / writes
 
@@ -132,6 +132,30 @@ Rules:
 | `coding`| `task.md`, `plan.md`, `spec.md`, `docs/onboarding/{how-to-code,source-structure}` | code, ticks `S#` in `plan.md`           | stage=coding, coding=in-progress→done    |
 | `review`| `task.md`, `spec.md`, `plan.md`, `docs/onboarding/{how-to-code,source-structure}`, diff | `review.md`, ticks `AC#`                | stage=review→done, review=…, status=done |
 | `debug` | `task.md`, `spec.md`/`plan.md` as needed, the failing repro           | `debug.md`, regression test             | debug=open-bugs→clear, status=blocked?   |
+
+## Git flow — branch per task, checkpoint commits, the user merges
+
+The pipeline records its progress in git as it goes. Three rules frame everything: **stages commit their own checkpoints, no stage ever pushes, and only the user merges.**
+
+**Branch per task.** `spec` opens each task on its own branch: `git checkout -b task/TASK-<ID>`, cut from the repo's **default branch** with a **clean working tree** (even when another branch happens to be checked out). Every stage of the task works on that branch, and `tasks/TASK-<ID>/` lives on it too — it reaches the default branch only via the final merge. If the working tree is dirty with changes that aren't this task's when it starts, **stop and ask** — never absorb someone else's (or another task's) work into the branch.
+
+**Checkpoint commits.** Every checkpoint in the shared-state protocol ends with a commit of that stage's work:
+
+- `spec` / `plan` / `review`: one commit per checkpoint — the stage artifact + `task.md`.
+- `coding`: one commit per ticked `S#`, made as soon as the step's `verify:` passes (code + the tick + `task.md` if updated). These are the save points that make a failed step recoverable — reverting to the last green step beats unpicking edits by hand.
+- `debug`: one commit per `BUG#` resolution — fix + regression test + `debug.md`.
+- Message format: **`TASK-<ID> <stage>: <what>`** (e.g. `TASK-20260724-fix-login coding: S3 wire the retry path`). These are working-history commits; the polished, user-facing message is the review's Commit/PR draft, applied by the user at merge.
+- **Stage only the files you touched, listed explicitly — never `git add -A` / `git add .`.** A blind add sweeps parallel work (another agent's, another task's) into your commit and welds the histories together permanently. Every stray file in a commit is a contract violation, same as a missing trace.
+
+**Merge belongs to the user.** No stage pushes, merges into the default branch, or deletes branches. On approval, `review` fills the **Merge block** in `review.md` — the exact squash-merge commands plus the polished commit message — and hands it over. Until the user runs it, the task branch simply stays put.
+
+**Parallel agents use worktrees.** Branches alone don't isolate two agents on one checkout — they still stomp each other's staged/unstaged state. When more than one agent works this repo at once, each takes its own worktree: `git worktree add .worktrees/<TASK-ID> task/TASK-<ID>` (removed with `git worktree remove` after merge). A single agent on the main checkout doesn't need this.
+
+**Task discovery across branches.** Until merged, a task folder exists only on its own branch, so a "most recently updated task" scan of `tasks/` sees just the current branch. Whenever a skill resolves tasks (`resume-task`, `ship`, lifecycle skills), it must also list `git branch --list 'task/*'` — a `task/*` branch with no folder on the current branch is an in-flight task; check it out (or its worktree) to act on it.
+
+**Stopping is committing.** Before a handoff, a `pause`, or going `blocked`, commit the checkpoint — an uncommitted stop strands work in a single working tree. The receiving agent checks out `task/TASK-<ID>` and hydrates as usual.
+
+**Fallback.** If the repo has no git, or the user explicitly asks to manage git themselves for a task, the pipeline runs exactly as before with no commits. This section is additive — every other rule in this contract is unchanged by it.
 
 ## Agent handoff — a task can switch platforms mid-pipeline
 

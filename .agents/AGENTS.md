@@ -31,5 +31,10 @@ instead — stop only on blockers).
 Conventions live in `docs/onboarding/` — read `how-to-code.md` before writing code
 and `source-structure.md` to decide where it goes (run `explore-source` to generate
 them if missing). Only the pipeline stages and lifecycle skills
-(`pause-task`/`archive-task`/`resume-task`) write to `tasks/`. Don't run
-git add/commit/push unless asked.
+(`pause-task`/`archive-task`/`resume-task`) write to `tasks/`.
+
+Git follows WORKFLOW.md → "Git flow": each task runs on its own `task/TASK-<ID>`
+branch (created by `spec`), stages commit their own checkpoints there (`coding`
+commits per ticked `S#`), staging only explicitly listed files — never
+`git add -A`. Never push, never merge: on approval `review` fills the Merge
+block in `review.md` and the user runs the merge themselves.

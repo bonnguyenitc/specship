@@ -17,4 +17,5 @@ Read `docs/onboarding/how-to-code.md` before writing code and
 `docs/onboarding/source-structure.md` to decide where changes belong; run
 `explore-source` to generate those docs if missing. Only pipeline stages and
 lifecycle skills (`pause-task`/`archive-task`/`resume-task`) write to `tasks/`.
-Don't run git add/commit/push unless asked.
+
+Git follows WORKFLOW.md → "Git flow": each task runs on its own `task/TASK-<ID>` branch (created by `spec`) and every stage commits its own checkpoints there (`coding` per ticked `S#`), staging only explicitly listed files — never `git add -A`. Never push or merge; on approval `review` fills the Merge block in `review.md` and the user merges.

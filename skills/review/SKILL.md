@@ -88,6 +88,13 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 ## Commit / PR Draft
 <commit message; PR title + body if relevant>
 
+## Merge
+<!-- filled on approval — the user runs these commands; the agent never merges or pushes -->
+    git checkout <default-branch>
+    git merge --squash task/TASK-<ID>
+    git commit   # use the Commit / PR Draft above as the message
+    git branch -D task/TASK-<ID>
+
 ## Follow-ups
 - <known limitations or deferred work>
 
@@ -98,7 +105,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 ## When done — prepare commit / PR
 - Summarize what changed (files + behavior) and confirm all checks passed, stating results plainly (if a test fails or a step was skipped, say so).
 - Put the **drafted** commit message + PR title/body in `review.md` for the user.
-- **Do not run `git add` / `commit` / `push`** — the user runs these themselves. Hand them the drafted message to use.
+- Commit the review checkpoint itself on the task branch (`review.md` + the `AC#` ticks in `spec.md` + `task.md`; message `TASK-<ID> review: <verdict>`), staging exactly those files. **Never merge or push** — on approval, fill the **Merge block** in `review.md` (squash-merge commands + the polished draft message) and hand it to the user; the merge is theirs (`../WORKFLOW.md` → Git flow).
 - **Approval gate:** set `status: approved` only when all `AC#`/`S#` are ticked, the gate is green, and **no unaddressed `blocker` finding remains**. Open `minor` findings don't block approval — move them to **Follow-ups** explicitly (never drop them silently). Anything else is `changes-requested`, with what's missing listed in Findings.
 
 ## External phase execution
@@ -109,6 +116,6 @@ If an orchestrator launched you for the **`review` phase only** (`../WORKFLOW.md
 **Re-review closes the loop.** A `changes-requested` verdict outranks the later gates until it is satisfied, so the stage that addresses the findings hands back by setting `next_phase: review` (`../WORKFLOW.md` → the gate table). When you are relaunched for that re-review, you are re-running against a `changes-requested` `review.md`: don't start a second review file — update this one in place per "Re-review after a loop-back", tick the findings whose fixes you verified, and set `review: approved` only once no unaddressed blocker remains.
 
 ## Next step
-- **`approved`** — the task is done: hand the user the drafted commit/PR message; they run git themselves.
+- **`approved`** — the task is done: hand the user the **Merge block** from `review.md`; merging the task branch is theirs.
 - **`changes-requested`** — ask the user whether to loop back: invoke the `coding` skill to address the Findings (or `debug` if a finding is a defect), then re-run this review. Keep the same `TASK-<ID>`; the Findings are the input for the fix. (Under `ship`, loop back automatically — its loop cap applies.)
 - **Re-review after a loop-back is targeted, not from scratch:** re-run the full gate (step 2 — always), then for each finding verify its fix and tick its checkbox in `review.md`, re-verify only the `AC#`s the fixes touch, and diff-review only the new changes. Don't re-litigate code that didn't change — but a fix that touches new files gets the full task-grounded checks on those files. Update `review.md` in place (bump `updated:`, Change History line), never fork a second review file.
