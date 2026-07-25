@@ -21,10 +21,4 @@ Maintain the shared task state in `tasks/TASK-<ID>/` as the contract specifies:
 read `task.md` on start, update it on finish; keep IDs (`R#`/`AC#`/`S#`/`BUG#`)
 stable; timestamp every log entry as `YYYY-MM-DD HH:MM +TZ` (get it from `date`).
 Only the pipeline stages and the lifecycle skills (`pause-task`/`archive-task`, and
-`resume-task` when un-shelving) write to `tasks/`.
-
-Git follows WORKFLOW.md → "Git flow": each task runs on its own `task/TASK-<ID>`
-branch (created by `spec`), stages commit their own checkpoints there (`coding`
-commits per ticked `S#`), staging only explicitly listed files — never
-`git add -A`. Never push, never merge: on approval `review` fills the Merge
-block in `review.md` and the user runs the merge themselves.
+`resume-task` when un-shelving) write to `tasks/`. Don't run git add/commit/push unless asked.

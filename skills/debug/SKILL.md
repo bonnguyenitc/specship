@@ -66,7 +66,7 @@ Update the entry's `status` as you go, and bump `updated:` on each change so the
 
 ## When done
 - State plainly: reproduced? root cause found? fix verified with the full suite green?
-- Commit the resolution on the task branch — fix + regression test + `debug.md` (`TASK-<ID> debug: BUG# fixed`), staging only what you touched; **never push or merge** (`../WORKFLOW.md` → Git flow).
+- **Do not run `git add` / `commit` / `push`** unless the user asks.
 
 ## External phase execution
 If an orchestrator launched you for the **`debug` phase only** (`../WORKFLOW.md` → External phase execution), the rules there override the handoff below. In short: confirm the envelope with `specship check TASK-<ID> --phase debug --actor <codex|claude-code> --expect-revision <n> --json` (exit 0 or stop), work from the named task's artifacts and the repro alone, write `debug.md` plus the regression test, then checkpoint `task.md` **last** with `revision` +1 and **stop**. Don't invoke the stage you interrupted, don't call `ship` — skip "Next step" entirely.

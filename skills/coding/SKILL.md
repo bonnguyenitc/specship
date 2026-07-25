@@ -47,7 +47,7 @@ For each step in the plan, follow the chosen approach:
 - **Stay surgical** — touch only what the step needs. Don't refactor or "improve" adjacent code. Remove only orphans your own change created.
 - **Run the step's own `verify:` from `plan.md`, verbatim.** That command is the step's definition of done — don't substitute an easier check, and report its real output. **Never weaken the check to make it pass** (loosening an assertion, deleting a test case, widening a type): if the check itself is wrong, that's a plan/spec change — update the artifact with a Change History line, then fix the check openly.
 - **Don't claim done until the check passes.** If it fails, fix and re-verify before moving on. **If the same check is still failing after ~3 distinct fix attempts, stop patching** — you're guessing, not fixing. Switch to the `debug` skill with the failing command as the repro (it records the fix in `tasks/TASK-<ID>/debug.md`) and resume after.
-- **Tick the step in `plan.md`, then commit it** — change its `- [ ] S#` to `- [x] S#` once its verify check passes, and commit the step on the task branch (`TASK-<ID> coding: S# <what>`), staging only the files the step touched — never `git add -A`. Per-step commits are the save points that make a failed later step recoverable (`../WORKFLOW.md` → Git flow).
+- **Tick the step in `plan.md`** — change its `- [ ] S#` to `- [x] S#` once its verify check passes, so the file tracks real progress.
 - **When reality contradicts the plan, update the plan — don't force it or drift silently.** A small deviation (different file, extra helper): note it inline on the `S#` and add a Change History line. A structural one (approach doesn't work, step obsolete, new step needed): stop, edit `plan.md` in place per its own rules (append `S#`, never renumber, strike obsolete steps), get it re-approved if the approach changed, then continue. If the *requirement* turns out wrong, that goes back to `spec.md`, not just the plan.
 
 ## Parallelizing independent steps
@@ -63,7 +63,7 @@ Fanning out is an application of the **in-stage subagents** doctrine (`../WORKFL
 - **Simplicity first:** if it could be 50 lines, don't write 200.
 - **Match, don't impose:** follow existing style even if you'd personally differ.
 - **Run the gates:** lint, format, type-check, and tests as the project defines them (the exact commands from `docs/onboarding/how-to-code.md`).
-- Commit your own checkpoints on the task branch (explicit paths only — never `git add -A`); **never push, merge, or commit to the default branch** (`../WORKFLOW.md` → Git flow).
+- Don't run `git add` / `commit` / `push` unless the user asks.
 
 ## When done
 - **Re-run the full gate fresh** (lint + type-check + the entire test suite), even though every step passed individually — a later step can regress an earlier one, and per-step checks won't catch it.
