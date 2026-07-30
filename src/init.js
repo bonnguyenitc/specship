@@ -130,6 +130,16 @@ function initTarget(name, projectDir, { force = false, dry = false, profile = DE
   if (r.skipped) s += `, ${r.skipped} kept - use --force to overwrite`;
   lines.push(s + ')');
 
+  // Project-level subagent definitions, only for targets that declare a home
+  // for them (see `subagents` in targets.js). Never profile-rendered: they
+  // carry no model frontmatter, so every profile installs identical bytes.
+  if (t.subagents) {
+    const ra = copyDir(path.join(PKG_ROOT, 'agents'), path.join(projectDir, t.subagents), force, undefined, { dry });
+    let sa = `agents  → ${t.subagents}/ (${ra.written} ${dry ? 'would be written' : 'written'}`;
+    if (ra.skipped) sa += `, ${ra.skipped} kept - use --force to overwrite`;
+    lines.push(sa + ')');
+  }
+
   const action = t.doc.merge
     ? mergeDoc(path.join(PKG_ROOT, t.doc.src), path.join(projectDir, t.doc.dest), dry)
     : writeDoc(path.join(PKG_ROOT, t.doc.src), path.join(projectDir, t.doc.dest), force, dry);
@@ -191,6 +201,26 @@ function uninstallTarget(name, projectDir, otherInstalled, { dry = false } = {})
     lines.push(`skills  → ${t.skillsDest}/ specship files ${dry ? 'would be removed' : 'removed'} (anything you added is kept)`);
   }
 
+  if (t.subagents) {
+    const agentsSharer = otherInstalled.find((n) => TARGETS[n].subagents === t.subagents);
+    if (agentsSharer) {
+      lines.push(`agents  → ${t.subagents}/ kept (still used by ${TARGETS[agentsSharer].label})`);
+    } else {
+      // Same rule as skills: the dir can hold user-authored agents - remove
+      // only the files specship installed, then prune dirs that became empty.
+      const destAgents = path.join(projectDir, t.subagents);
+      if (!dry) {
+        for (const rel of expectedAgentFiles(t)) {
+          const f = path.join(destAgents, rel);
+          if (fs.existsSync(f)) fs.unlinkSync(f);
+          pruneEmptyDirs(path.dirname(f), projectDir);
+        }
+        pruneEmptyDirs(destAgents, projectDir);
+      }
+      lines.push(`agents  → ${t.subagents}/ specship files ${dry ? 'would be removed' : 'removed'} (anything you added is kept)`);
+    }
+  }
+
   const docSharer = otherInstalled.find((n) => TARGETS[n].doc.dest === t.doc.dest);
   const dest = path.join(projectDir, t.doc.dest);
   if (docSharer) {
@@ -240,6 +270,22 @@ function expectedSkillFiles(t) {
   return out;
 }
 
+// All subagent files the package would install for a target (paths relative
+// to the package-root `agents/` dir); empty for targets without `subagents`.
+function expectedAgentFiles(t) {
+  if (!t.subagents) return [];
+  const out = [];
+  (function walk(dir, rel) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (IGNORE.has(entry.name)) continue;
+      const r = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(path.join(dir, entry.name), r);
+      else out.push(r);
+    }
+  })(path.join(PKG_ROOT, 'agents'), '');
+  return out;
+}
+
 // Audit one installed target: skills drift vs the packaged tree, config
 // marker/template integrity, version stamp vs the running package version.
 // `profile` is resolved by the caller (cmdDoctor), which owns refusing an
@@ -263,6 +309,20 @@ function doctorTarget(name, projectDir, profile = DEFAULT_PROFILE) {
   const nameSome = (list) => list.slice(0, 5).join(', ') + (list.length > 5 ? ` (+${list.length - 5} more)` : '');
   if (missing.length) problems.push(`missing skill file(s): ${nameSome(missing)} - run \`specship update\``);
   if (drifted.length) problems.push(`skill file(s) differ from specship v${VERSION}: ${nameSome(drifted)} - stale or user-modified; \`specship update\` overwrites`);
+
+  // Subagent files audit byte-for-byte against the packaged sources: they are
+  // never profile-rendered, so no `render` indirection here.
+  if (t.subagents) {
+    const aMissing = [];
+    const aDrifted = [];
+    for (const rel of expectedAgentFiles(t)) {
+      const d = path.join(projectDir, t.subagents, rel);
+      if (!fs.existsSync(d)) aMissing.push(rel);
+      else if (!fs.readFileSync(path.join(PKG_ROOT, 'agents', rel)).equals(fs.readFileSync(d))) aDrifted.push(rel);
+    }
+    if (aMissing.length) problems.push(`missing agent file(s): ${nameSome(aMissing)} - run \`specship update\``);
+    if (aDrifted.length) problems.push(`agent file(s) differ from specship v${VERSION}: ${nameSome(aDrifted)} - stale or user-modified; \`specship update\` overwrites`);
+  }
 
   const dest = path.join(projectDir, t.doc.dest);
   if (t.doc.merge) {

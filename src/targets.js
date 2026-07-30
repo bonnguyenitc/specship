@@ -14,6 +14,10 @@
 //                     so the orchestrated profile must neutralise it (→ `inherit`)
 //                     to let the launcher's explicit model win. Agents without it
 //                     ignore the line, so their output never varies by profile.
+// `subagents`: dest dir for the project-level subagent definitions shipped in
+//              the package-root `agents/` dir. Only targets with a native
+//              subagent file format carry it (today: Claude Code); the rest
+//              skip the dir entirely, so their output is unaffected.
 module.exports = {
   claude: {
     label: 'Claude Code',
@@ -21,6 +25,7 @@ module.exports = {
     doc: { src: '.claude/CLAUDE.md', dest: 'CLAUDE.md', merge: true },
     actor: 'claude-code',
     modelFrontmatter: true,
+    subagents: '.claude/agents',
   },
   codex: {
     label: 'Codex',

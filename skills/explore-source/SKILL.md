@@ -13,7 +13,7 @@ Goal: turn an unfamiliar repo into a clear mental model fast. Read before you ch
 - You're about to modify code in an area you haven't read yet.
 
 ## Delegate heavy exploration to a subagent
-For anything beyond a tiny repo, **don't read the whole codebase in the main thread** — it floods the context. Spawn the built-in **Explore** agent (or `general-purpose` for multi-step research) to do the wide fan-out reads and return only conclusions, keeping this thread clean.
+For anything beyond a tiny repo, **don't read the whole codebase in the main thread** — it floods the context. Spawn the **`specship-explorer`** agent if your platform can — it ships with specship for Claude Code (`.claude/agents/`), prefers the codebase-memory MCP when the project has it, and falls back to plain search — else the built-in **Explore** agent (or `general-purpose` for multi-step research), to do the wide fan-out reads and return only conclusions, keeping this thread clean.
 
 - **When:** a large/unfamiliar repo, or a broad question ("where is X handled across the codebase?", "what are all the entry points?").
 - **How:** run the steps below as a brief for the agent. Give it a focused goal and ask for a **structured result**, not file dumps — e.g. "List every top-level dir with its role and the key entry file (path + entry symbol)" or "Find where auth is enforced; return the call chain."
@@ -62,7 +62,7 @@ ls -la ; tree -L 2 2>/dev/null || find . -maxdepth 2 -type d -not -path "*/node_
 - External integrations: DB, cache, queues, third-party APIs, auth.
 
 ## Searching effectively
-- Use `grep`/`rg <pattern>` to find where a concept lives; for broad multi-location sweeps across naming conventions, spawn the **Explore** agent and ask only for conclusions.
+- Use `grep`/`rg <pattern>` to find where a concept lives; for broad multi-location sweeps across naming conventions, spawn the **`specship-explorer`** agent if your platform can (or the built-in **Explore**) and ask only for conclusions.
 - To answer "where is X handled?", grep the user-facing string or endpoint, then follow the call chain.
 
 ## Output: write the onboarding docs

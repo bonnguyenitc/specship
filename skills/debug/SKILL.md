@@ -28,7 +28,7 @@ Part of the task pipeline — see `../WORKFLOW.md` for the full contract. `debug
 Work from evidence, one hypothesis at a time. Don't guess-and-change.
 
 1. **Reproduce — no fix before a repro.** Get a reliable, minimal reproduction and **watch it fail for the expected reason** before touching any code; a fix you can't demonstrate failing is a guess. If you can't reproduce it, *that* is the investigation — add logging, tighten the conditions, gather evidence — don't "fix" what you can't observe. Capture the exact error/stack, inputs, and environment, and **write the failing test** that triggers the bug — it becomes the regression test. When `coding` hands off after its 3-attempt rule, start from its failing `verify:` command as the repro and **read what was already tried** — those disproven attempts are evidence, not a path to retread.
-2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `grep`/`rg` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **Explore** / `general-purpose` agent and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread. If your platform can't spawn subagents, do the same investigation **inline** in the main thread (`../WORKFLOW.md` → In-stage subagents — delegation is an optimization, never a precondition).
+2. **Locate** — narrow where it happens: read the stack trace, follow the data, add targeted logging or use the debugger, bisect if needed. Use `grep`/`rg` to trace the code path. For a deep, noisy investigation (large logs, many files), delegate the search to the **`specship-explorer`** agent if your platform can spawn it (it ships with specship for Claude Code), else **Explore** / `general-purpose`, and ask only for the suspected location + evidence — then do the fix and verification yourself in this thread. If your platform can't spawn subagents, do the same investigation **inline** in the main thread (`../WORKFLOW.md` → In-stage subagents — delegation is an optimization, never a precondition).
 3. **Hypothesize — one at a time, revert what fails.** State the suspected root cause explicitly before changing anything, and confirm it with evidence (a log, a value, a failing assertion), don't assume. If the evidence disproves it, **revert that attempt's changes before testing the next hypothesis** — stacked speculative edits pollute the diff and can mask the symptom without fixing the cause. Record each ruled-out hypothesis (and what disproved it) in the `BUG#` entry so the investigation survives interruption and nobody retreads it.
 4. **Fix** — apply the **minimum** change that addresses the root cause. Stay surgical; don't refactor unrelated code or fix symptoms downstream.
 5. **Verify** — the failing test now passes, the full suite stays green, and the original reproduction is gone.
@@ -56,7 +56,7 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - symptom: <observed wrong behavior + error/stack>
 - reproduce: <steps / failing test that triggers it>
 - ruled out: <hypotheses tried and disproven, with the evidence — omit if none>
-- root cause: <the actual underlying cause, at `path:line`>
+- root cause: <the actual underlying cause, at `path` (`symbol`) — not a line number; they drift>
 - fix: <what changed and why, files touched>
 - regression test: <test name/path guarding it>
 - related: <R#/AC#/S# affected, or other code with the same risk>

@@ -64,9 +64,12 @@ Practicalities:
 - For freshness-critical topics, include the current year in at least one query
   and check result dates.
 - For a big research task (many subtopics, "deep dive"), **delegate the fan-out
-  to subagents** if the agent supports them: one subagent per angle, each
-  returning conclusions + source URLs, never raw page dumps. Synthesize and
-  verify in the main thread yourself. If the platform can't spawn subagents,
+  to subagents** if the agent supports them: one subagent per angle — the
+  **`specship-researcher`** agent if your platform can spawn it (ships with
+  specship for Claude Code), else any research-capable agent it offers — each returning
+  conclusions + source URLs, never raw page dumps. Synthesize and
+  verify in the main thread yourself; the report in Step 6 is yours to write,
+  not a subagent's. If the platform can't spawn subagents,
   do the same fan-out **inline** in the main thread (`../WORKFLOW.md` →
   In-stage subagents — delegation is an optimization, never a precondition).
 

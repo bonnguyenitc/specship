@@ -110,6 +110,101 @@ test('openai.yaml manifest installs for codex only', () => {
   assert.ok(!fs.existsSync(path.join(d, '.specship/skills/spec/agents')), 'shared adapters skip it');
 });
 
+// Driven by the packaged `agents/` dir, not a filename list: a new subagent
+// file must install (and stay claude-only) without this test being touched.
+// Relative paths of every file under a dir, so the walk matches what copyDir
+// and expectedAgentFiles actually do (recursive) - a shallow readdir would
+// silently exempt a nested definition from every assertion below.
+function filesUnder(root, rel = '', out = []) {
+  for (const e of fs.readdirSync(path.join(root, rel), { withFileTypes: true })) {
+    if (e.name === '.DS_Store') continue;
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) filesUnder(root, r, out);
+    else out.push(r);
+  }
+  return out;
+}
+
+test('every packaged subagent installs for claude only', () => {
+  const src = path.join(__dirname, '..', 'agents');
+  const rels = filesUnder(src);
+  for (const n of ['specship-explorer.md', 'specship-reviewer.md', 'specship-researcher.md']) {
+    assert.ok(rels.includes(n), `${n} is shipped`);
+  }
+  const d = tmp();
+  af(['init', '--all'], d);
+  for (const r of rels) {
+    const dest = path.join(d, '.claude/agents', r);
+    assert.ok(fs.existsSync(dest), `claude gets ${r}`);
+    assert.strictEqual(read(dest), read(path.join(src, r)), `${r} byte-identical to the packaged source`);
+  }
+  // No other target has a subagent home, so an --all install must not have
+  // dropped these files anywhere else.
+  const basenames = new Set(rels.map((r) => path.basename(r)));
+  const agentsRoot = path.join(d, '.claude/agents');
+  const strays = filesUnder(d)
+    .filter((r) => basenames.has(path.basename(r)))
+    .filter((r) => !path.join(d, r).startsWith(agentsRoot + path.sep));
+  assert.deepStrictEqual(strays, [], 'subagents install only under .claude/agents');
+  const d2 = tmp();
+  af(['init', '--codex'], d2);
+  assert.ok(!fs.existsSync(path.join(d2, '.claude')), 'codex install creates no .claude');
+});
+
+// src/init.js skips the profile renderer for agent files on the stated grounds
+// that they pin no model. If one ever did, `--profile orchestrated` would
+// install it verbatim and silently re-pin the model that profile exists to
+// unpin (the BUG6 class), with doctor still reporting healthy.
+test('no packaged subagent pins a model', () => {
+  const src = path.join(__dirname, '..', 'agents');
+  for (const r of filesUnder(src)) {
+    assert.doesNotMatch(read(path.join(src, r)), /^model:/m,
+      `${r} must not pin a model - agent files bypass the profile renderer`);
+  }
+});
+
+test('user-modified subagent file is kept; --force overwrites', () => {
+  const d = tmp();
+  af(['init', '--claude'], d);
+  const agent = path.join(d, '.claude/agents/specship-explorer.md');
+  fs.writeFileSync(agent, 'CUSTOM');
+  af(['init', '--claude'], d); // no --force
+  assert.strictEqual(read(agent), 'CUSTOM', 'should be kept');
+  af(['init', '--claude', '--force'], d);
+  assert.notStrictEqual(read(agent), 'CUSTOM', 'should be overwritten');
+});
+
+test('uninstall removes the specship subagent but keeps user agents', () => {
+  const d = tmp();
+  af(['init', '--claude'], d);
+  fs.writeFileSync(path.join(d, '.claude/agents/mine.md'), 'my agent\n');
+  af(['uninstall', '--claude'], d);
+  assert.ok(!fs.existsSync(path.join(d, '.claude/agents/specship-explorer.md')), 'specship agent removed');
+  assert.strictEqual(read(path.join(d, '.claude/agents/mine.md')), 'my agent\n', 'user agent must survive');
+  const d2 = tmp();
+  af(['init', '--claude'], d2);
+  af(['uninstall', '--claude'], d2);
+  assert.ok(!fs.existsSync(path.join(d2, '.claude/agents')), 'emptied agents dir pruned');
+});
+
+test('doctor flags a missing or drifted subagent file; update restores it', () => {
+  const d = tmp();
+  af(['init', '--claude'], d);
+  const agent = path.join(d, '.claude/agents/specship-explorer.md');
+  fs.unlinkSync(agent);
+  let r = afFail(['doctor'], d);
+  assert.strictEqual(r.status, 1);
+  assert.match(r.out, /missing agent file/);
+  af(['update'], d);
+  assert.ok(fs.existsSync(agent), 'update restores the agent file');
+  fs.writeFileSync(agent, 'EDITED');
+  r = afFail(['doctor'], d);
+  assert.strictEqual(r.status, 1);
+  assert.match(r.out, /agent file\(s\) differ/);
+  af(['update'], d);
+  assert.match(af(['doctor'], d), /✓ Claude Code/, 'update heals the drift');
+});
+
 test('stage skills ship the per-stage model mapping', () => {
   const d = tmp();
   af(['init', '--claude'], d);

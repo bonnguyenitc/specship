@@ -35,7 +35,7 @@ Split the review by what kind of signal each check needs. **You wrote (or drove)
 **a. Delegate correctness bug-hunting to `/code-review`** (an independent reviewer with fresh context):
 - Invoke the `code-review` skill (via the Skill tool) at an appropriate effort — it reads the working diff and reports correctness bugs, missed edge cases, and reuse/simplification/efficiency findings without the bias of having just written the code.
 - Treat its output as input: fold every finding into your **Findings** below. For a genuine defect, hand it to `debug` (it gets a `BUG#` + regression test); don't just hand-wave it.
-- **Review panel (in-stage subagents).** The **default is one** independent pass — the single `/code-review` above. A **panel of >1** independent reviewers is **opt-in**: run it when the user asks, or when a high-risk or large diff warrants more eyes (your judgement — there is no fixed size threshold). Panel members are **blind to each other** (each a fresh, context-free pass, optionally with different lenses — correctness, security, performance); the **main thread dedups and merges** their findings into **Findings** and **owns the final verdict**. If your platform can't spawn subagents, do the default correctness pass and any additional pass(es) **inline** yourself — never drop the coverage. See `../WORKFLOW.md` → In-stage subagents for the invariants.
+- **Review panel (in-stage subagents).** The **default is one** independent pass — the single `/code-review` above. A **panel of >1** independent reviewers is **opt-in**: run it when the user asks, or when a high-risk or large diff warrants more eyes (your judgement — there is no fixed size threshold). Spawn each extra member as the **`specship-reviewer`** agent if your platform can spawn it (ships with specship for Claude Code) — one invocation per lens, naming the lens in its brief — else any independent-reviewer agent your platform offers. Panel members are **blind to each other** (each a fresh, context-free pass, optionally with different lenses — correctness, security, performance, contract-consistency); the **main thread dedups and merges** their findings into **Findings** and **owns the final verdict**. If your platform can't spawn subagents, do the default correctness pass and any additional pass(es) **inline** yourself — never drop the coverage. See `../WORKFLOW.md` → In-stage subagents for the invariants.
 
 **b. Keep the task-grounded checks here** (these need `spec.md`/`plan.md`/onboarding context that an independent pass doesn't have):
 - **Coverage sweep — nothing missed, both ways.** Walk `spec.md` top-down: every `R#` and `AC#` maps to a ticked `S#` in `plan.md`, and the diff actually contains that step's change. Then the reverse: every changed line traces to a planned step / spec requirement — flag anything unrelated or speculative. An `R#` no ticked step covers means the work isn't done, however green the gate is.
@@ -80,10 +80,13 @@ updated: <YYYY-MM-DD HH:MM +TZ>
 - [ ] AC2 — <why not met>
 
 ## Findings
-<!-- source: code-review (independent) | self (task-grounded); severity: blocker (must fix before approve) | minor (may ship as follow-up) -->
+<!-- source: code-review | panel:<lens> (an independent panel member) | self (task-grounded) -->
+<!-- severity: blocker (must fix before approve) | minor (may ship as follow-up) | unverified (a reviewer could not substantiate it — say what's missing; never promote it to a defect or drop it) -->
+<!-- ref: `path` (`symbol`) — never a line number; they drift, and a fabricated one is worse than none -->
 <!-- checkbox = addressed; tick it on re-review once the fix is verified -->
-- [ ] [code-review][blocker] <correctness bug / missed edge case>, ref `path:line`
-- [ ] [self][minor] <style deviation from how-to-code / simplification>, ref `path:line`
+- [ ] [code-review][blocker] <correctness bug / missed edge case>, ref `path` (`symbol`)
+- [ ] [panel:security][minor] <finding from an independent panel member>, ref `path` (`symbol`)
+- [ ] [self][minor] <style deviation from how-to-code / simplification>, ref `path` (`symbol`)
 
 ## Commit / PR Draft
 <commit message; PR title + body if relevant>

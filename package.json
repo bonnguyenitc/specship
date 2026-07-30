@@ -12,6 +12,7 @@
     "bin",
     "src",
     "skills",
+    "agents",
     ".claude/CLAUDE.md",
     ".agents/AGENTS.md",
     ".gemini/GEMINI.md",

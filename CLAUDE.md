@@ -3,8 +3,9 @@
 npm package that installs a spec→plan→coding→review skills workflow into
 projects (Claude Code, Codex, Cursor, Antigravity). Entry: `bin/cli.js` →
 `src/cli.js`; install logic in `src/init.js` + `src/targets.js`; skill sources
-in `skills/`; per-agent templates in `.claude/`, `.codex/`, `.cursor/`,
-`.antigravity/`.
+in `skills/`; subagent definitions in `agents/` (installed only for targets
+declaring `subagents` in `targets.js` — today just Claude Code); per-agent
+templates in `.claude/`, `.codex/`, `.cursor/`, `.antigravity/`.
 
 ## Verify every change
 
@@ -17,7 +18,8 @@ Always prove a change works before declaring it done:
   once — see `tasks/LESSONS.md` L2/L3.
 - Real install: `node bin/cli.js init --all --dir "$(mktemp -d)"`, then inspect
   the resulting tree (marker block in CLAUDE.md, skills copied, codex-only
-  `openai.yaml` manifest).
+  `openai.yaml` manifest, claude-only `.claude/agents/` subagents and nowhere
+  else).
 - Anything touching packaging or `publish.sh`: `./publish.sh --dry-run`.
 
 ## Learnings

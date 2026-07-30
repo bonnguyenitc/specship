@@ -215,10 +215,10 @@ stops only on blocker questions, destructive actions, or review failures.
 | Command | What it does |
 | --- | --- |
 | `init <agents>` | Install the workflow for any supported agent flag, or every adapter with `--all`. With no agent flags on a terminal, picks interactively. |
-| `update` | Refresh skills and config for whatever agents are already installed in the project. |
-| `uninstall <agents>` | Remove an agent's skills and config. Shared files (`.specship/skills/`, a shared `AGENTS.md` block) are kept while another installed agent still uses them; merge blocks are stripped without touching your surrounding content. |
+| `update` | Refresh skills, subagents, and config for whatever agents are already installed in the project. |
+| `uninstall <agents>` | Remove an agent's skills, subagents, and config. Only the files specship installed are deleted — anything you added under `.claude/skills/` or `.claude/agents/` survives, and a directory is removed only once it is empty. Shared files (`.specship/skills/`, a shared `AGENTS.md` block) are kept while another installed agent still uses them; merge blocks are stripped without touching your surrounding content. |
 | `list` | Show which agents are installed here. |
-| `doctor` | Audit the install: skill files drifted from the packaged version, broken config, stale version stamps. Exits non-zero when problems are found. |
+| `doctor` | Audit the install: skill or subagent files missing or drifted from the packaged version, broken config, stale version stamps. Your own files in those folders are ignored. Exits non-zero when problems are found. |
 | `check` | Validate `tasks/` against the workflow contract (stage preconditions, ID cross-references, timestamps). Exits non-zero on violations — wire it into CI. Given a `TASK-<ID>` and `--phase`, validates one phase gate and prints JSON instead — see [External orchestration](#external-orchestration). |
 | `inspect <TASK-ID>` | Print one task's normalized state as JSON. Read-only; never writes. |
 | `tasks` | List the active tasks and where each one stands (`tasks/archive/` is hidden). |
@@ -356,6 +356,25 @@ writes or merges its config pointer at the correct native path.
 | `--cline` | `.specship/skills/` | `.clinerules/specship.md` | write |
 | `--roo` | `.specship/skills/` | `.roo/rules/specship.md` | write |
 
+`--claude` additionally installs specship's three **subagents** to
+`.claude/agents/`. Each is a helper that returns findings and is instructed
+never to write task state — the stage's main thread stays the only writer.
+
+| Subagent | Used by | What it does |
+| --- | --- | --- |
+| `specship-explorer` | `spec`, `plan`, `explore-source`, `debug` | Wide code search. Prefers the codebase-memory MCP tools when the project has that server, falls back to plain search (`rg`/grep) when it doesn't, so it works either way. Returns cited conclusions, not file dumps. |
+| `specship-reviewer` | `review` | An independent, context-free pass over the diff — one member of the opt-in review panel, invoked once per lens (correctness, security, performance, contract-consistency). Reports `blocker`/`minor` findings with a concrete failure scenario. |
+| `specship-researcher` | `research` | One query angle of a bigger research task, invoked once per angle. Prefers a specialized search MCP over generic web search, reads primary sources, and returns cited conclusions with each source's date — never raw pages, and never the report itself. |
+
+No other target installs subagent files: specship ships no adapter for their
+formats yet. Some do have one — Gemini CLI reads `.gemini/agents/*.md` and
+Copilot reads `.github/agents/*.agent.md`, both markdown with YAML frontmatter —
+so porting these definitions there is mostly a copy plus that platform's
+frontmatter (Gemini, for one, requires an explicit `tools:` list). Until then,
+on every non-Claude target the skills use their built-in agents or do the same
+work inline, exactly as before. The review panel's policy is unchanged either
+way: one independent pass by default, a panel only when asked for or warranted.
+
 `--agents` is the broad compatibility adapter for tools that read `AGENTS.md`,
 including Aider, Devin, Jules, Amp, Zed, Junie, Factory, goose, Augment Code,
 and similar agents. Tool-specific adapters are still provided where the tool has
@@ -415,6 +434,7 @@ recorded against the contract.
 
 ```text
 skills/                 # canonical skill playbooks shipped to each agent
+agents/                 # project-level subagent definitions → .claude/agents/ (--claude only)
 .claude/CLAUDE.md       # pointer template → installed as CLAUDE.md
 .agents/AGENTS.md       # AGENTS.md pointer template (shared by --codex and --agents)
 .gemini/GEMINI.md       # pointer template → installed as GEMINI.md
